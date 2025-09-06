@@ -1,0 +1,78 @@
+/* General Layout */
+.contact-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000; /* Black background */
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.contact-form {
+  background: #1a1a1a; /* Dark black-gray */
+  padding: 40px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 8px 20px rgba(255, 165, 0, 0.2); /* Orange glow */
+}
+
+.contact-form h1 {
+  text-align: center;
+  color: orange;
+  margin-bottom: 10px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #ddd;
+  margin-bottom: 25px;
+}
+
+/* Input fields */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: orange;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: orange;
+  outline: none;
+}
+
+/* Button */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: orange;
+  color: #000;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: background 0.3s ease;
+}
+
+.submit-btn:hover {
+  background: #ff8c00; /* Darker orange */
+}
