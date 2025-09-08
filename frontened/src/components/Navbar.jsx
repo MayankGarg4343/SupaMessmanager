@@ -110,6 +110,12 @@ export default function Navbar() {
           >
             Contact Us
           </a>
+          <a
+            href="/contact"
+            className="px-4 py-2 rounded-xl bg-orange-600 text-white font-medium hover:bg-orange-500 transition"
+          >
+            Feedback
+          </a>
         </div>
 
         {/* Mobile Menu Button */}

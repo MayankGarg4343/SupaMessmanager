@@ -2,15 +2,19 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const bcrypt = require("bcryptjs"); // for password hashing
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-mongoose.connect("mongodb://127.0.0.1:27017/contactFormDB")
+// MongoDB Connection
+mongoose
+  .connect("mongodb://127.0.0.1:27017/contactFormDB")
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
+/* ================= Contact Schema ================= */
 const contactSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -22,6 +26,17 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model("Contact", contactSchema);
 
+/* ================= Student Schema ================= */
+const studentSchema = new mongoose.Schema({
+  name: String,
+  email: { type: String, unique: true }, // prevent duplicates
+  password: String,
+  createdAt: { type: Date, default: Date.now },
+});
+
+const Student = mongoose.model("Student", studentSchema);
+
+/* ================= Contact Routes ================= */
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, phone, subject, message } = req.body;
@@ -32,6 +47,7 @@ app.post("/api/contact", async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to send message." });
   }
 });
+
 app.get("/api/contact", async (req, res) => {
   try {
     const contacts = await Contact.find().sort({ createdAt: -1 });
@@ -40,5 +56,56 @@ app.get("/api/contact", async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to fetch messages." });
   }
 });
+
+/* ================= Student Auth Routes ================= */
+// Register Route
+app.post("/api/register", async (req, res) => {
+  try {
+    const { name, email, password } = req.body;
+
+    // Check if email already exists
+    const existingStudent = await Student.findOne({ email });
+    if (existingStudent) {
+      return res.status(400).json({ success: false, message: "Email already registered." });
+    }
+
+    // Hash password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newStudent = new Student({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    await newStudent.save();
+    res.status(201).json({ success: true, message: "Student registered successfully!" });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Registration failed." });
+  }
+});
+
+// Login Route
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const student = await Student.findOne({ email });
+    if (!student) {
+      return res.status(400).json({ success: false, message: "Invalid email or password." });
+    }
+
+    const isMatch = await bcrypt.compare(password, student.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Invalid email or password." });
+    }
+
+    res.json({ success: true, message: "Login successful!", student: { id: student._id, name: student.name, email: student.email } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Login failed." });
+  }
+});
+
+/* ================= Start Server ================= */
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

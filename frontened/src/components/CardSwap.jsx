@@ -31,8 +31,8 @@ const placeNow = (el, slot, skew) =>
     x: slot.x,
     y: slot.y,
     z: slot.z,
-    xPercent: -50,
-    yPercent: -50,
+    xPercent: -70,
+    yPercent: -160,
     skewY: skew,
     transformOrigin: "center center",
     zIndex: slot.zIndex,
@@ -40,14 +40,14 @@ const placeNow = (el, slot, skew) =>
   });
 
 const CardSwap = ({
-  width = 400,        
-  height = 330,        
+  width = 370,        
+  height = 200,        
   cardDistance = 50,   
   verticalDistance = 60,
   delay = 2000,         
   pauseOnHover = false,
   onCardClick,
-  skewAmount = 5,     
+  skewAmount = 1,     
   easing = "elastic",
   children,
 }) => {
@@ -63,8 +63,8 @@ const CardSwap = ({
         }
       : {
           ease: "power1.inOut",
-          durDrop: 0.8,
-          durMove: 0.8,
+          durDrop: 0.2,
+          durMove: 0.2,
           durReturn: 0.8,
           promoteOverlap: 0.45,
           returnDelay: 0.2,
