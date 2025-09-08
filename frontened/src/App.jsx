@@ -6,6 +6,7 @@ import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import SDashboard from "./pages/SDashboard";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/contact" element={<ContactUs/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<SDashboard />} />
       </Routes>
     </Router>
   );

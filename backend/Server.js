@@ -2,19 +2,17 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const bcrypt = require("bcryptjs"); // for password hashing
+const bcrypt = require("bcryptjs");
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB Connection
 mongoose
   .connect("mongodb://127.0.0.1:27017/contactFormDB")
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
-/* ================= Contact Schema ================= */
 const contactSchema = new mongoose.Schema({
   name: String,
   email: String,
@@ -26,17 +24,15 @@ const contactSchema = new mongoose.Schema({
 
 const Contact = mongoose.model("Contact", contactSchema);
 
-/* ================= Student Schema ================= */
 const studentSchema = new mongoose.Schema({
   name: String,
-  email: { type: String, unique: true }, // prevent duplicates
+  email: { type: String, unique: true },
   password: String,
   createdAt: { type: Date, default: Date.now },
 });
 
 const Student = mongoose.model("Student", studentSchema);
 
-/* ================= Contact Routes ================= */
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, phone, subject, message } = req.body;
@@ -57,19 +53,15 @@ app.get("/api/contact", async (req, res) => {
   }
 });
 
-/* ================= Student Auth Routes ================= */
-// Register Route
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if email already exists
     const existingStudent = await Student.findOne({ email });
     if (existingStudent) {
       return res.status(400).json({ success: false, message: "Email already registered." });
     }
 
-    // Hash password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newStudent = new Student({
@@ -85,7 +77,6 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// Login Route
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -106,6 +97,5 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-/* ================= Start Server ================= */
 const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

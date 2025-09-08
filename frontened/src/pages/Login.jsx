@@ -19,10 +19,9 @@ export default function Login() {
       });
 
       if (response.data.success) {
-        // Save user info in localStorage
         localStorage.setItem("student", JSON.stringify(response.data.user));
         alert("Login successful!");
-        navigate("/dashboard"); // redirect to student dashboard or home
+        navigate("/dashboard");
       } else {
         alert(response.data.message || "Invalid email or password.");
       }
