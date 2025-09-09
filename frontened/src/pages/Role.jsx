@@ -71,7 +71,8 @@ function Role() {
           onClick={() => navigate("/login")}>
             Student
           </button>
-          <button className="px-6 py-3 rounded-xl bg-orange-600 text-white hover:bg-orange-500 transition duration-300">
+          <button className="px-6 py-3 rounded-xl bg-orange-600 text-white hover:bg-orange-500 transition duration-300"
+            onClick={()=>navigate("/adminDashboard")}>
             Admin
           </button>
         </div>

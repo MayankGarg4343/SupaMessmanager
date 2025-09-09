@@ -19,8 +19,9 @@ export default function Login() {
       });
 
       if (response.data.success) {
-        localStorage.setItem("student", JSON.stringify(response.data.user));
-        alert("Login successful!");
+        // Correctly store the student data returned from the backend
+        localStorage.setItem("student", JSON.stringify(response.data.student));
+        console.log("Login successful! Redirecting to dashboard.");
         navigate("/dashboard");
       } else {
         alert(response.data.message || "Invalid email or password.");
