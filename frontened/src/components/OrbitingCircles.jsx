@@ -1,6 +1,6 @@
 import React from "react";
 
-export const OrbitingCircles = ({ radius = 100, duration = 8, delay = 0, children }) => {
+export const OrbitingCircles = ({ radius = 100, duration = 4, delay = 0, children }) => {
   return (
     <div
       className="absolute animate-spin-slow"

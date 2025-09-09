@@ -1,0 +1,148 @@
+/* Dashboard Layout */
+.dashboard {
+  display: flex;
+  background: #0d0d0d;
+  color: #fff;
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: #1a1a1a;
+  color: #ff8800;
+  padding: 2rem 1rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+}
+
+.logo {
+  font-size: 1.7rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.menu li:hover,
+.menu li.active {
+  background: #ff8800;
+  color: #fff;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 240px; /* space for sidebar */
+  flex: 1;
+  padding: 2rem;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.logout-btn {
+  background: #ff8800;
+  color: #000;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.logout-btn:hover {
+  background: #ffa533;
+}
+
+/* Cards Section */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: #1f1f1f;
+  border: 1px solid #ff8800;
+  padding: 1.5rem;
+  border-radius: 12px;
+  transition: transform 0.3s ease, background 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  background: #ff8800;
+  color: #000;
+}
+
+.card.highlight {
+  border: 2px solid #ffa533;
+}
+
+/* Buttons */
+.btn {
+  background: #ff8800;
+  border: none;
+  padding: 0.5rem 1rem;
+  margin-top: 0.8rem;
+  border-radius: 6px;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #ffa533;
+}
+
+/* Analytics Section */
+.analytics {
+  margin-top: 3rem;
+}
+
+.analytics h2 {
+  margin-bottom: 1.5rem;
+  color: #ffa533;
+}
+
+.analytics-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.2rem;
+}
+
+.analytics-card {
+  background: #1a1a1a;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #ff8800;
+  text-align: center;
+  transition: 0.3s;
+}
+
+.analytics-card:hover {
+  background: #ff8800;
+  color: #000;
+}
