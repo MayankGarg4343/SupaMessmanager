@@ -764,3 +764,5 @@ function SDashboard() {
 }
 
 export default SDashboard;
+
+// now the student is able to see the menu which is being updated by the admin.
