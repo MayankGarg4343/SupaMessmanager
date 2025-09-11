@@ -15,7 +15,7 @@ const DashboardPage = ({ user, onLogout }) => {
   const [data, setData] = useState({
     todayMenu: {},
     mealsBooked: [],
-    notices: ["📢 Pizza Night this Saturday! 🍕", "🎉 Mess Fees Due by End of Week!"],
+    notices: ["📢 Pizza Night this Saturday!", "🎉 Mess Fees Due by End of Week!"],
     yourStats: { mealsTaken: 0, foodSaved: 0, complaintsResolved: 0 }
   });
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,7 @@ const DashboardPage = ({ user, onLogout }) => {
         setData({
           todayMenu: menuData,
           mealsBooked: bookingsData.length > 0 ? bookingsData[0].meals : [],
-          notices: ["📢 Pizza Night this Saturday! 🍕", "🎉 Mess Fees Due by End of Week!"],
+          notices: ["📢 Pizza Night this Saturday!", "🎉 Mess Fees Due by End of Week!"],
           yourStats: {
             mealsTaken: bookingsData.length,
             foodSaved: bookingsData.length * 0.1, // Mock data
