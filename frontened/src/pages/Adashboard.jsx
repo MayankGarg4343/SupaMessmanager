@@ -79,7 +79,7 @@ const DashboardPage = () => {
       <header className="topbar">
         <h1>Welcome, Admin 👋</h1>
         <button className="logout-btn">
-          Logout ➡️
+          Logout
         </button>
       </header>
 
