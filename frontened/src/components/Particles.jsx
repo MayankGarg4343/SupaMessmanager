@@ -124,7 +124,7 @@ const Particles = ({
       mouseRef.current = { x, y };
     };
 
-    if (moveParticlesOnHover) {
+    if (!moveParticlesOnHover) {
       container.addEventListener('mousemove', handleMouseMove);
     }
 
