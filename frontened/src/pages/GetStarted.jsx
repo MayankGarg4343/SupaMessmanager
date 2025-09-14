@@ -19,7 +19,7 @@ function GetStarted() {
       {/* 🔹 Particles fixed as background */}
       <div className="particles-background">
         <Particles
-          particleColors={["#ffffff", "#ffffff"]}
+          particleColors={["#ffffff", "#fffff0"]}
           particleCount={200}
           particleSpread={10}
           speed={0.1}
