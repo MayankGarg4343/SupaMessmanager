@@ -1,3 +1,4 @@
+// this is getStarted page
 import React, { useState, useRef } from "react";
 import Particles from "../components/Particles";
 import VariableProximity from "../components/VariableProximity";
