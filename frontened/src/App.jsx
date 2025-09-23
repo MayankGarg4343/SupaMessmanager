@@ -6,7 +6,7 @@ import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import SDashboard from "./pages/sdashboard";
+import SDashboard from "./pages/SDashboard";
 import FeedbackForm from "./components/FeedbackForm";
 import ADashboard from "./pages/Adashboard";
 

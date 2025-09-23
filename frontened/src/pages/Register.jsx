@@ -86,7 +86,7 @@ export default function Register() {
               placeholder="Full Name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none"
+              className="input w-full"
               required
             />
 
@@ -95,7 +95,7 @@ export default function Register() {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none"
+              className="input w-full"
               required
             />
 
@@ -104,7 +104,7 @@ export default function Register() {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none"
+              className="input w-full"
               required
             />
 
@@ -113,14 +113,14 @@ export default function Register() {
               placeholder="Confirm Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none"
+              className="input w-full"
               required
             />
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md font-medium"
+              className="btn w-full bg-orange-500 hover:bg-orange-600 border-none text-white"
             >
               {loading ? "Registering..." : "Register"}
             </button>

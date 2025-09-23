@@ -375,13 +375,104 @@ const Complaints = ({ user }) => {
   );
 };
 
-const Analytics = () => (
-  <div className="page-content">
-    <h1><span role="img" aria-label="analytics">📊</span> Analytics</h1>
-    <p>Detailed reports and charts on mess usage and performance.</p>
-    <div className="page-placeholder">Personal analytics dashboard with charts.</div>
-  </div>
-);
+// Lightweight SVG Bar Chart for student analytics
+function SBarChart({ data, height = 160, barColor = "#ff8800", labelColor = "#ccc" }) {
+  const max = Math.max(1, ...data.map(d => d.value));
+  const barW = Math.max(16, Math.floor(240 / Math.max(1, data.length)));
+  const gap = 10;
+  const width = data.length * (barW + gap) - gap;
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+      {data.map((d, i) => {
+        const h = Math.round((d.value / max) * (height - 36));
+        const x = i * (barW + gap);
+        const y = height - h - 18;
+        return (
+          <g key={d.label} transform={`translate(${x},0)`}>
+            <rect x={0} y={y} width={barW} height={h} rx={6} fill={barColor} />
+            <text x={barW / 2} y={height - 4} textAnchor="middle" fontSize="10" fill={labelColor}>{d.label}</text>
+            <text x={barW / 2} y={y - 4} textAnchor="middle" fontSize="11" fill={labelColor}>{d.value}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+const Analytics = ({ user }) => {
+  const [mealsByType, setMealsByType] = useState([
+    { label: 'Breakfast', value: 0 },
+    { label: 'Lunch', value: 0 },
+    { label: 'Dinner', value: 0 },
+  ]);
+  const [complaintsStatus, setComplaintsStatus] = useState([
+    { label: 'Pending', value: 0 },
+    { label: 'In Progress', value: 0 },
+    { label: 'Resolved', value: 0 },
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      try {
+        // Fetch this student's bookings and complaints
+        const [bookingsRes, complaintsRes] = await Promise.all([
+          fetch(`${API_URL}/bookings/${user._id}`),
+          fetch(`${API_URL}/complaints/student/${user._id}`),
+        ]);
+        const bookings = bookingsRes.ok ? await bookingsRes.json() : [];
+        const complaints = complaintsRes.ok ? await complaintsRes.json() : [];
+
+        // Meals by type across student's bookings
+        const mealsBy = { Breakfast: 0, Lunch: 0, Dinner: 0 };
+        bookings.forEach(b => (b.meals || []).forEach(m => { if (mealsBy[m] !== undefined) mealsBy[m]++; }));
+        setMealsByType([
+          { label: 'Breakfast', value: mealsBy.Breakfast },
+          { label: 'Lunch', value: mealsBy.Lunch },
+          { label: 'Dinner', value: mealsBy.Dinner },
+        ]);
+
+        // Complaints status distribution for this student
+        const compBy = { 'Pending': 0, 'In Progress': 0, 'Resolved': 0 };
+        complaints.forEach(c => { if (compBy[c.status] !== undefined) compBy[c.status]++; });
+        setComplaintsStatus([
+          { label: 'Pending', value: compBy['Pending'] },
+          { label: 'In Progress', value: compBy['In Progress'] },
+          { label: 'Resolved', value: compBy['Resolved'] },
+        ]);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, [user]);
+
+  return (
+    <div className="page-content">
+      <h1><span role="img" aria-label="analytics">📊</span> Analytics</h1>
+      {loading && <div className="loading-state">Loading analytics...</div>}
+      {error && <div className="error-state">Error: {error}</div>}
+      {!loading && !error && (
+        <>
+          <div className="analytics-cards">
+            <div className="analytics-card">
+              <h3>Meals You've Booked (All Time)</h3>
+              <SBarChart data={mealsByType} />
+            </div>
+            <div className="analytics-card">
+              <h3>Your Complaints Status</h3>
+              <SBarChart data={complaintsStatus} />
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const Profile = ({ user }) => {
   if (!user) return <div className="loading-state">Loading profile...</div>;
@@ -406,33 +497,40 @@ function SDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const initUser = async () => {
       try {
-        const res = await fetch(`${API_URL}/students`);
-        if (res.ok) {
-          const students = await res.json();
-          if (students.length > 0) {
-            setUser(students[0]);
-          } else {
-            console.error("No students found in the database.");
-            window.location.href = '/login'; // Redirect to login if no user is found
-          }
-        } else {
-          console.error("Failed to fetch user data.");
-          window.location.href = '/login'; // Redirect to login on fetch failure
+        const stored = localStorage.getItem("student");
+        if (!stored) {
+          window.location.href = '/login';
+          return;
         }
+        const parsed = JSON.parse(stored);
+        const normalized = { ...parsed, _id: parsed?._id || parsed?.id };
+        setUser(normalized);
+
+        // Optionally enrich with createdAt from server list
+        try {
+          const res = await fetch(`${API_URL}/students`);
+          if (res.ok) {
+            const students = await res.json();
+            const match = students.find(s => (s._id || s.id) === normalized._id);
+            if (match && match.createdAt && !normalized.createdAt) {
+              setUser(prev => ({ ...prev, createdAt: match.createdAt }));
+            }
+          }
+        } catch (_) { /* non-blocking */ }
       } catch (err) {
-        console.error("Error fetching user data:", err);
-        window.location.href = '/login'; // Redirect to login on network error
+        console.error('Failed to parse stored student:', err);
+        window.location.href = '/login';
       } finally {
         setLoading(false);
       }
     };
-    fetchUser();
+    initUser();
   }, []);
 
   const handleLogout = () => {
-    // In a real app, you would clear a token or session here.
+    try { localStorage.removeItem('student'); } catch(_){}
     setUser(null);
     window.location.href = '/';
   };
@@ -453,7 +551,7 @@ function SDashboard() {
       case 'Complaints':
         return <Complaints user={user} />;
       case 'Analytics':
-        return <Analytics />;
+        return <Analytics user={user} />;
       case 'Profile':
         return <Profile user={user} />;
       default:
@@ -737,6 +835,27 @@ function SDashboard() {
           .profile-details strong {
             color: #fff;
           }
+          /* --- Layout/Structure Enhancements (preserve existing color theme) --- */
+          .dashboard { gap: 0; }
+          .sidebar { width: 260px; }
+          .sidebar .menu li { display: flex; align-items: center; gap: 10px; }
+          .sidebar .menu li { line-height: 1.2; }
+
+          .topbar { position: sticky; top: 0; backdrop-filter: saturate(120%) blur(2px); }
+
+          .cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+          .card { border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+          .card.highlight { box-shadow: 0 8px 22px rgba(255, 136, 0, 0.25); }
+
+          .main-content { max-width: 1200px; }
+          .analytics-cards { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+          .profile-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+          .form-container input, .form-container textarea { outline: none; transition: box-shadow .2s ease; }
+          .form-container input:focus, .form-container textarea:focus { box-shadow: 0 0 0 2px rgba(255,136,0,0.35); }
+
+          .booking-form { grid-template-columns: 1fr; }
+          .menu-display { border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
         `}
       </style>
       <div className="dashboard">

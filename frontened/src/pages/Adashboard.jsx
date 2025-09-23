@@ -1,5 +1,42 @@
 import React, { useState, useEffect } from "react";
 
+// Lightweight SVG Charts (no external deps)
+function BarChart({ data, height = 180, barColor = "#ff8800", labelColor = "#aaa" }) {
+  const max = Math.max(1, ...data.map(d => d.value));
+  const barW = Math.max(16, Math.floor(240 / Math.max(1, data.length)));
+  const gap = 10;
+  const width = data.length * (barW + gap) - gap;
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+      {data.map((d, i) => {
+        const h = Math.round((d.value / max) * (height - 40));
+        const x = i * (barW + gap);
+        const y = height - h - 20;
+        return (
+          <g key={d.label} transform={`translate(${x},0)`}>
+            <rect x={0} y={y} width={barW} height={h} rx={6} fill={barColor} />
+            <text x={barW / 2} y={height - 6} textAnchor="middle" fontSize="10" fill={labelColor}>{d.label}</text>
+            <text x={barW / 2} y={y - 6} textAnchor="middle" fontSize="11" fill={labelColor}>{d.value}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function Legend({ items }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 8 }}>
+      {items.map(it => (
+        <div key={it.label} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 10, height: 10, background: it.color, display: 'inline-block', borderRadius: 2 }} />
+          <span style={{ color: '#aaa', fontSize: 12 }}>{it.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // The base URL for your backend API
 const API_URL = "http://localhost:5000/api";
 
@@ -12,13 +49,36 @@ const formatDate = (dateString) => {
 // --- Page Components (defined within the same file) ---
 
 const DashboardPage = () => {
+  const [analyticsDate, setAnalyticsDate] = useState(new Date().toISOString().split('T')[0]);
   const [data, setData] = useState({
     totalStudents: 0,
     activeComplaints: 0,
     feedbackReceived: 0,
     mealsBooked: 0,
     recentUpdates: [],
+    mealsByType: [
+      { label: 'Breakfast', value: 0 },
+      { label: 'Lunch', value: 0 },
+      { label: 'Dinner', value: 0 },
+    ],
+    ratingsDist: [
+      { label: '1★', value: 0 },
+      { label: '2★', value: 0 },
+      { label: '3★', value: 0 },
+      { label: '4★', value: 0 },
+      { label: '5★', value: 0 },
+    ],
+    complaintsStatus: [
+      { label: 'Pending', value: 0 },
+      { label: 'In Progress', value: 0 },
+      { label: 'Resolved', value: 0 },
+    ],
   });
+  const [weeklyMeals, setWeeklyMeals] = useState([]); // [{label: 'YYYY-MM-DD', value}]
+  const [weeklyComplaints, setWeeklyComplaints] = useState([]);
+  const [weeklyFeedback, setWeeklyFeedback] = useState([]);
+  const [allComplaints, setAllComplaints] = useState([]);
+  const [allFeedback, setAllFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -34,7 +94,7 @@ const DashboardPage = () => {
           fetch(`${API_URL}/students`),
           fetch(`${API_URL}/complaints`),
           fetch(`${API_URL}/feedback`),
-          fetch(`${API_URL}/bookings/daily/${new Date().toISOString().split('T')[0]}`),
+          fetch(`${API_URL}/bookings/daily/${analyticsDate}`),
         ]);
 
         if (!studentsRes.ok || !complaintsRes.ok || !feedbackRes.ok || !bookingsRes.ok) {
@@ -44,10 +104,22 @@ const DashboardPage = () => {
         const students = await studentsRes.json();
         const complaints = await complaintsRes.json();
         const feedback = await feedbackRes.json();
+        setAllComplaints(complaints);
+        setAllFeedback(feedback);
         const bookings = await bookingsRes.json();
 
         const activeComplaintsCount = complaints.filter(c => c.status !== "Resolved").length;
         const mealsBookedCount = bookings.reduce((sum, booking) => sum + booking.meals.length, 0);
+
+        // Analytics distributions
+        const mealsBy = { Breakfast: 0, Lunch: 0, Dinner: 0 };
+        bookings.forEach(b => (b.meals || []).forEach(m => { if (mealsBy[m] !== undefined) mealsBy[m]++; }));
+
+        const ratingsBy = { 1:0, 2:0, 3:0, 4:0, 5:0 };
+        feedback.forEach(f => { const r = Number(f.rating); if (ratingsBy[r] !== undefined) ratingsBy[r]++; });
+
+        const compBy = { 'Pending':0, 'In Progress':0, 'Resolved':0 };
+        complaints.forEach(c => { if (compBy[c.status] !== undefined) compBy[c.status]++; });
 
         // Simple logic to get recent updates
         const recentComplaints = complaints.slice(0, 2).map(c => `New complaint submitted: ${c.subject}`);
@@ -60,6 +132,23 @@ const DashboardPage = () => {
           feedbackReceived: feedback.length,
           mealsBooked: mealsBookedCount,
           recentUpdates,
+          mealsByType: [
+            { label: 'Breakfast', value: mealsBy.Breakfast },
+            { label: 'Lunch', value: mealsBy.Lunch },
+            { label: 'Dinner', value: mealsBy.Dinner },
+          ],
+          ratingsDist: [
+            { label: '1★', value: ratingsBy[1] },
+            { label: '2★', value: ratingsBy[2] },
+            { label: '3★', value: ratingsBy[3] },
+            { label: '4★', value: ratingsBy[4] },
+            { label: '5★', value: ratingsBy[5] },
+          ],
+          complaintsStatus: [
+            { label: 'Pending', value: compBy['Pending'] },
+            { label: 'In Progress', value: compBy['In Progress'] },
+            { label: 'Resolved', value: compBy['Resolved'] },
+          ],
         });
       } catch (err) {
         setError(err.message);
@@ -69,7 +158,64 @@ const DashboardPage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [analyticsDate]);
+
+  // Simple line chart without external deps
+  function LineChart({ series, height = 180, stroke = "#ff8800" }) {
+    const width = Math.max(280, series.length * 44);
+    const max = Math.max(1, ...series.map(p => p.value));
+    const points = series.map((p, i) => {
+      const x = i * (width / Math.max(1, series.length - 1));
+      const y = height - (p.value / max) * (height - 30) - 20;
+      return { x, y, label: p.label, value: p.value };
+    });
+    const path = points.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
+    return (
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
+        <polyline fill="none" stroke={stroke} strokeWidth="2" points={points.map(p => `${p.x},${p.y}`).join(' ')} />
+        {points.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r="3" fill={stroke} />
+            <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="10" fill="#aaa">{p.value}</text>
+            <text x={p.x} y={height - 6} textAnchor="middle" fontSize="10" fill="#aaa">{p.label.slice(5)}</text>
+          </g>
+        ))}
+      </svg>
+    );
+  }
+
+  // Fetch last 7 days ending at analyticsDate
+  useEffect(() => {
+    const loadWeekly = async () => {
+      try {
+        const base = new Date(analyticsDate);
+        const days = [...Array(7)].map((_, idx) => {
+          const d = new Date(base);
+          d.setDate(base.getDate() - (6 - idx));
+          return d.toISOString().split('T')[0];
+        });
+        const responses = await Promise.all(days.map(d => fetch(`${API_URL}/bookings/daily/${d}`)));
+        const jsons = await Promise.all(responses.map(r => (r.ok ? r.json() : [])));
+        const totals = jsons.map(list => list.reduce((sum, b) => sum + (b.meals?.length || 0), 0));
+        setWeeklyMeals(days.map((d, i) => ({ label: d, value: totals[i] })));
+
+        // Complaints per day using allComplaints (createdAt)
+        const compTotals = days.map((d) => {
+          return allComplaints.filter(c => new Date(c.createdAt).toISOString().split('T')[0] === d).length;
+        });
+        setWeeklyComplaints(days.map((d, i) => ({ label: d, value: compTotals[i] })));
+
+        // Feedback per day using allFeedback (createdAt)
+        const feedTotals = days.map((d) => {
+          return allFeedback.filter(f => new Date(f.createdAt).toISOString().split('T')[0] === d).length;
+        });
+        setWeeklyFeedback(days.map((d, i) => ({ label: d, value: feedTotals[i] })));
+      } catch (e) {
+        // non-blocking
+      }
+    };
+    loadWeekly();
+  }, [analyticsDate, allComplaints, allFeedback]);
 
   if (loading) return <div className="loading-state">Loading dashboard data...</div>;
   if (error) return <div className="error-state">Error: {error}</div>;
@@ -125,9 +271,23 @@ const DashboardPage = () => {
 
       {/* Analytics Section */}
       <section className="analytics-section">
+        <div className="analytics-card" style={{ gridColumn: '1 / -1' }}>
+          <h2>Analytics Controls</h2>
+          <div className="toolbar">
+            <label>
+              Select Date:
+              <input type="date" value={analyticsDate} onChange={(e) => setAnalyticsDate(e.target.value)} style={{ marginLeft: 8 }} />
+            </label>
+          </div>
+        </div>
         <div className="analytics-card chart-card">
-          <h2>Meal Trends</h2>
-          <div className="chart-placeholder">Interactive chart goes here...</div>
+          <h2>Meals Booked Today</h2>
+          <BarChart data={data.mealsByType} barColor="#ff8800" />
+          <Legend items={[
+            { label: 'Breakfast', color: '#ff8800' },
+            { label: 'Lunch', color: '#ff8800' },
+            { label: 'Dinner', color: '#ff8800' },
+          ]} />
         </div>
         <div className="analytics-card recent-updates-card">
           <h2>Recent Updates</h2>
@@ -136,6 +296,32 @@ const DashboardPage = () => {
               <li key={index}>{update}</li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      <section className="analytics-section" style={{ gridTemplateColumns: '1fr 1fr' }}>
+        <div className="analytics-card">
+          <h2>Feedback Ratings</h2>
+          <BarChart data={data.ratingsDist} barColor="#ffb000" />
+        </div>
+        <div className="analytics-card">
+          <h2>Complaints Status</h2>
+          <BarChart data={data.complaintsStatus} barColor="#ffa533" />
+        </div>
+      </section>
+
+      <section className="analytics-section" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="analytics-card">
+          <h2>Meals Trend (Last 7 Days)</h2>
+          <LineChart series={weeklyMeals} />
+        </div>
+        <div className="analytics-card">
+          <h2>Complaints Trend (Last 7 Days)</h2>
+          <LineChart series={weeklyComplaints} stroke="#ffa533" />
+        </div>
+        <div className="analytics-card">
+          <h2>Feedback Trend (Last 7 Days)</h2>
+          <LineChart series={weeklyFeedback} stroke="#ffb000" />
         </div>
       </section>
     </>
@@ -896,6 +1082,36 @@ function ADashboard() {
           .delete-btn:hover {
             background: #c0392b;
           }
+          /* --- Layout/Structure Enhancements (preserve existing color theme) --- */
+          .admin-dashboard { gap: 0; }
+          .sidebar { width: 260px; }
+          .sidebar .menu li { display: flex; align-items: center; gap: 10px; line-height: 1.2; }
+
+          .topbar { position: sticky; top: 0; backdrop-filter: saturate(120%) blur(2px); }
+
+          .cards { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+          .card { border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+          .card:hover { transform: translateY(-1px); transition: transform .15s ease; }
+          .metric { font-variant-numeric: tabular-nums; }
+
+          .main-content { max-width: 1200px; }
+          .analytics-section { grid-template-columns: 2fr 1fr; }
+          .analytics-card { border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+          .chart-placeholder { border-radius: 10px; }
+
+          .page-content { border-radius: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+
+          .table-container { border-radius: 12px; overflow: hidden; }
+          table { border-radius: 12px; }
+          th, td { white-space: nowrap; }
+
+          .list-container { gap: 12px; }
+          .list-item { border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+          .updates-list li { border-radius: 10px; }
+          
+          /* Remove hover effects on admin dashboard cards and updates list */
+          .card:hover { transform: none; background: inherit; color: inherit; }
+          .updates-list li:hover { background: inherit; color: inherit; }
         `}
       </style>
       <div className="admin-dashboard">
