@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 // The base URL for your backend API
 const API_URL = "http://localhost:5000/api";
 
-// --- Utility Functions ---
+// --- Utility Functions --- 
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
