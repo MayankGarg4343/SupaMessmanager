@@ -224,8 +224,6 @@ app.get("/api/contact", async (req, res) => {
   }
 });
 
-// register part.
-
 app.post("/api/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
