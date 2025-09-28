@@ -3,6 +3,16 @@ import React, { useState, useEffect } from "react";
 // The base URL for your backend API
 const API_URL = "http://localhost:5000/api";
 
+// Helper to get Authorization header from stored token
+const getAuthHeader = () => {
+  try {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch (_) {
+    return {};
+  }
+};
+
 // --- Utility Functions --- 
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -35,8 +45,8 @@ const DashboardPage = ({ user, onLogout }) => {
           complaintsRes
         ] = await Promise.all([
           fetch(`${API_URL}/menu/${new Date().toISOString().split('T')[0]}`),
-          fetch(`${API_URL}/bookings/${user._id}`),
-          fetch(`${API_URL}/complaints/student/${user._id}`)
+          fetch(`${API_URL}/bookings/${user._id}`, { headers: { ...getAuthHeader() } }),
+          fetch(`${API_URL}/complaints/student/${user._id}`, { headers: { ...getAuthHeader() } })
         ]);
 
         const menuData = menuRes.ok ? await menuRes.json() : {};
@@ -202,7 +212,7 @@ const MealBooking = ({ user }) => {
       setLoading(true);
       const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify({
           studentId: user._id,
           date: new Date().toISOString().split('T')[0],
@@ -269,7 +279,7 @@ const FeedbackPage = ({ user }) => {
       setLoading(true);
       const res = await fetch(`${API_URL}/feedback`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify(feedbackData),
       });
       const data = await res.json();
@@ -333,7 +343,7 @@ const Complaints = ({ user }) => {
       setLoading(true);
       const res = await fetch(`${API_URL}/complaints`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
         body: JSON.stringify({
           studentId: user._id,
           ...complaintData,
@@ -530,7 +540,10 @@ function SDashboard() {
   }, []);
 
   const handleLogout = () => {
-    try { localStorage.removeItem('student'); } catch(_){}
+    try {
+      localStorage.removeItem('student');
+      localStorage.removeItem('token');
+    } catch(_){}
     setUser(null);
     window.location.href = '/';
   };

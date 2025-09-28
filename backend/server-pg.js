@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const { Sequelize, DataTypes } = require("sequelize");
+ const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
@@ -180,6 +181,29 @@ function mapContact(row) {
   };
 }
 
+// JWT configuration and helpers
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+
+function generateToken(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+}
+
+function authMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers["authorization"]; // format: Bearer <token>
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ success: false, message: "Authorization token missing" });
+    }
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
+}
+
 app.post("/api/contact", async (req, res) => {
   try {
     const { name, email, phone, subject, message } = req.body;
@@ -235,13 +259,24 @@ app.post("/api/login", async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid email or password." });
     }
 
+    const token = generateToken({ id: student.id, email: student.email, name: student.name });
     res.json({
       success: true,
       message: "Login successful!",
+      token,
       student: { id: student.id, name: student.name, email: student.email },
     });
   } catch (error) {
     res.status(500).json({ success: false, error: "Login failed." });
+  }
+});
+
+// Example protected route to validate token and return current user
+app.get("/api/me", authMiddleware, async (req, res) => {
+  try {
+    res.json({ success: true, user: req.user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Failed to fetch profile." });
   }
 });
 

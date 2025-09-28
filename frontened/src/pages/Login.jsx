@@ -19,8 +19,13 @@ export default function Login() {
       });
 
       if (response.data.success) {
-        // Correctly store the student data returned from the backend
+        // Store the student and JWT token returned from the backend
         localStorage.setItem("student", JSON.stringify(response.data.student));
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+          // Set axios default Authorization header for subsequent requests (optional)
+          axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
+        }
         console.log("Login successful! Redirecting to dashboard.");
         navigate("/dashboard");
       } else {
