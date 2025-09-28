@@ -271,7 +271,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Example protected route to validate token and return current user
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
     res.json({ success: true, user: req.user });
