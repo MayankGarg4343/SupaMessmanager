@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config(); // imports the package and loads the env variables.
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
