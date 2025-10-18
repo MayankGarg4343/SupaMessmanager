@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");// used for the password hashing.
 const { Sequelize, DataTypes } = require("sequelize");
- const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 app.use(cors());
