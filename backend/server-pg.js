@@ -16,6 +16,8 @@ const sequelize = new Sequelize(DATABASE_URL, {
   logging: false,
 });
 
+// defining the data model of the project.
+
 const Contact = sequelize.define(
   "Contact",
   {
