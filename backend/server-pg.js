@@ -1,7 +1,7 @@
 require("dotenv").config(); // imports the package and loads the env variables.
 const express = require("express"); // used for routing.
 const bodyParser = require("body-parser");
-const cors = require("cors");
+const cors = require("cors");// used to connect frontend and backend.
 const bcrypt = require("bcryptjs");// used for the password hashing.
 const { Sequelize, DataTypes } = require("sequelize");
 const jwt = require("jsonwebtoken");
