@@ -2,15 +2,15 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "server-pg.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server-pg.js",
-    "niki": "nodemon server-pg.js",
+    "start": "node server.js",
+    "niki": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "ISC", 
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -19,10 +19,8 @@
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "nodemon": "^3.1.11",
-    "pg": "^8.13.1",
-    "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.3"
+    "mongoose": "^8.13.1",
+    "nodemon": "^3.1.11"
   },
   "devDependencies": {
     "color": "^5.0.3"
