@@ -704,8 +704,9 @@ const Settings = () => (
 
 // --- Main App Component ---
 
-function ADashboard() {
+function Adashboard() {
   const [currentPage, setCurrentPage] = useState('Dashboard');
+  const [user, setUser] = useState({ name: 'Admin User', email: 'admin@messmate.com' });
 
   const renderPage = () => {
     switch (currentPage) {
@@ -1139,4 +1140,4 @@ function ADashboard() {
   );
 }
 
-export default ADashboard; // dashboard is working
+export default Adashboard; // dashboard is working

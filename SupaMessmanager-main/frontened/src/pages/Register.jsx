@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import PixelBlast from "../components/PixelBlast";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { showToast } from "../utils/toast";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -15,7 +16,7 @@ export default function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      showToast.error("Passwords do not match!");
       return;
     }
 
@@ -28,14 +29,28 @@ export default function Register() {
       });
 
       if (response.data.success) {
-        alert("Registration successful! Please login.");
+        showToast.success("Registration successful! Please login.");
         navigate("/login");
       } else {
-        alert(response.data.message || "Registration failed.");
+        showToast.error(response.data.message || "Registration failed.");
       }
     } catch (error) {
       console.error("Error registering user:", error);
-      alert("Something went wrong. Try again!");
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 
+                          error.response.data?.error || 
+                          "Registration failed. Please try again.";
+        showToast.error(errorMessage);
+      } else if (error.request) {
+        // Request was made but no response received
+        showToast.error("No response from server. Please check your connection.");
+      } else {
+        // Something else happened
+        showToast.error("Something went wrong. Try again!");
+      }
     } finally {
       setLoading(false);
     }
@@ -43,7 +58,6 @@ export default function Register() {
 
   return (
     <>
-      {/* PixelBlast Background */}
       <PixelBlast
         variant="circle"
         pixelSize={10}
@@ -72,69 +86,71 @@ export default function Register() {
           background: "black",
         }}
       />
-
-      {/* Register Form */}
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md bg-gray-800 p-8 rounded-2xl shadow-xl">
-          <h2 className="text-center text-orange-500 text-2xl font-bold mb-6">
-            Student Portal - Register
-          </h2>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="contact-form">
+        <h1>Student Registration</h1>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="name">Full Name</label>
             <input
               type="text"
-              placeholder="Full Name"
+              id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="input w-full px-5 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white rounded-md"
+              placeholder="Enter your full name"
               required
             />
+          </div>
 
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
             <input
               type="email"
-              placeholder="Email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input w-full px-5 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white rounded-md"
+              placeholder="Enter your email"
               required
             />
+          </div>
 
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
             <input
               type="password"
-              placeholder="Password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input w-full px-5 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white rounded-md"
+              placeholder="Create a password (min. 6 characters)"
               required
             />
+          </div>
 
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <input
               type="password"
-              placeholder="Confirm Password"
+              id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="input w-full px-5 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white rounded-md"
+              placeholder="Confirm your password"
               required
             />
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn w-full bg-orange-500 hover:bg-orange-600 border-none text-white rounded-md px-5 py-2"
-            >
-              {loading ? "Registering..." : "Register"}
-            </button>
-          </form>
+          <button type="submit" className="submit-btn" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
 
-          <p className="mt-4 text-sm text-center text-gray-600">
-            Already have an account?{" "}
-            <button
-              onClick={() => navigate("/login")}
-              className="text-orange-500 font-medium underline"
-            >
-              Login
-            </button>
-          </p>
+        <div className="signup-link">
+          Already have an account?{" "}
+          <button
+            onClick={() => navigate("/login")}
+            className="text-orange-500 font-medium underline"
+          >
+            Login
+          </button>
         </div>
       </div>
     </>

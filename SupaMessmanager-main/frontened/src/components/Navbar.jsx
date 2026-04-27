@@ -29,9 +29,9 @@ export default function Navbar() {
       }`}
     >
       <div className="container mx-auto flex justify-between items-center px-6 py-4">
-        <div className="text-4xl font-bold tracking-wide text-white">
+        <a href="/"><div className="text-4xl font-bold tracking-wide text-white">
           Mess<span style={{color:"#ff6600"}}>Mate</span>
-        </div>
+        </div></a>
 
         <div className="hidden md:flex space-x-6 text-sm font-medium">
           <a

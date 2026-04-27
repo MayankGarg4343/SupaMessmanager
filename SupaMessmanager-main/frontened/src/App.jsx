@@ -9,10 +9,12 @@ import Register from "./pages/Register";
 import SDashboard from "./pages/SDashboard";
 import FeedbackForm from "./components/FeedbackForm";
 import ADashboard from "./pages/Adashboard";
+import CustomToastContainer from "./components/ToastContainer";
 
 function App() {
   return (
     <Router>
+      <CustomToastContainer />
       <Routes>
         <Route path="/" element={<GetStarted />} />
         <Route path="/role" element={<Role />} />

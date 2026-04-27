@@ -22,9 +22,10 @@
   background: rgba(0, 0, 0, 0.85);
   padding: 40px;
   border-radius: 12px;
-  max-width: 900px; /* wider form */
+  max-width: 900px;
   width: 90%;
   box-shadow: 0 0 15px rgba(238, 231, 218, 0.6);
+  margin: 20px auto;
 }
 
 .contact-form h1 {
@@ -88,4 +89,20 @@
 .submit-btn:hover {
   background: #ff6600;
   color: white;
+}
+
+@media (max-width: 768px) {
+  .contact-form {
+    padding: 20px;
+    width: 95%;
+  }
+  
+  .contact-form h1 {
+    font-size: 40px;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../components/FeedbackForm.css";
 import PixelBlast from "../components/PixelBlast";
+import { showToast } from "../utils/toast";
 
 const FeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -25,7 +26,7 @@ const FeedbackForm = () => {
 
       const data = await response.json();
       if (data.success) {
-        alert("Thank you for your feedback! 🙌");
+        showToast.success("Thank you for your feedback! 🙌");
         setFormData({
           name: "",
           email: "",
@@ -33,10 +34,10 @@ const FeedbackForm = () => {
           feedback: "",
         });
       } else {
-        alert("Failed to send feedback.");
+        showToast.error("Failed to send feedback.");
       }
     } catch (error) {
-      alert("Error connecting to server.");
+      showToast.error("Error connecting to server.");
     }
   };
 

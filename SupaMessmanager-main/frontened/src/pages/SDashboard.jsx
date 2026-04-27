@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // The base URL for your backend API
 const API_URL = "http://localhost:5000/api";
@@ -505,13 +506,14 @@ function SDashboard() {
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initUser = async () => {
       try {
         const stored = localStorage.getItem("student");
         if (!stored) {
-          window.location.href = '/login';
+          navigate('/login');
           return;
         }
         const parsed = JSON.parse(stored);
@@ -543,9 +545,10 @@ function SDashboard() {
     try {
       localStorage.removeItem('student');
       localStorage.removeItem('token');
+      setUser(null);
+      // Use React Router navigation instead of hard redirect
+      navigate('/');
     } catch(_){}
-    setUser(null);
-    window.location.href = '/';
   };
 
   if (loading) return <div className="full-screen-loader">Loading user data...</div>;

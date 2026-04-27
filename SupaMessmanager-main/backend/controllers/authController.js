@@ -2,6 +2,7 @@ const Student = require('../models/Student');
 const bcrypt = require('bcryptjs');
 const { generateToken } = require('../middleware/auth');
 
+
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;

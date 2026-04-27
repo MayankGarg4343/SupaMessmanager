@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import PixelBlast from "../components/PixelBlast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import "../components/Login.css";
+import { showToast } from "../utils/toast";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -18,22 +20,23 @@ export default function Login() {
         password,
       });
 
+      console.log(response);
+
       if (response.data.success) {
-        // Store the student and JWT token returned from the backend
+        // Stores the student and JWT token returned from the backend
         localStorage.setItem("student", JSON.stringify(response.data.student));
         if (response.data.token) {
           localStorage.setItem("token", response.data.token);
-          // Set axios default Authorization header for subsequent requests (optional)
           axios.defaults.headers.common["Authorization"] = `Bearer ${response.data.token}`;
         }
-        console.log("Login successful! Redirecting to dashboard.");
+        showToast.success("Login successful! Redirecting to dashboard.");
         navigate("/dashboard");
       } else {
-        alert(response.data.message || "Invalid email or password.");
+        showToast.error(response.data.message || "Invalid email or password.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert("Something went wrong. Try again!");
+      showToast.error("Something went wrong. Try again!");
     } finally {
       setLoading(false);
     }
@@ -41,78 +44,74 @@ export default function Login() {
 
   return (
     <>
-      <PixelBlast
-        variant="circle"
-        pixelSize={10}
-        color="white"
-        patternScale={10}
-        patternDensity={1.2}
-        pixelSizeJitter={0.5}
-        enableRipples
-        rippleSpeed={0.4}
-        rippleThickness={0.12}
-        rippleIntensityScale={1.5}
-        liquid
-        liquidStrength={0.12}
-        liquidRadius={1.2}
-        liquidWobbleSpeed={5}
-        speed={0.6}
-        edgeFade={0.25}
-        transparent
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: -1,
-          background: "black",
-        }}
-      />
+      <div className="login-page">
+        <PixelBlast
+          variant="circle"
+          pixelSize={10}
+          color="white"
+          patternScale={10}
+          patternDensity={1.2}
+          pixelSizeJitter={0.5}
+          enableRipples
+          rippleSpeed={0.4}
+          rippleThickness={0.12}
+          rippleIntensityScale={1.5}
+          liquid
+          liquidStrength={0.12}
+          liquidRadius={1.2}
+          liquidWobbleSpeed={5}
+          speed={0.6}
+          edgeFade={0.25}
+          transparent
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            zIndex: -1,
+            background: "black",
+          }}
+        />
 
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-full max-w-md bg-gray-800 p-8 rounded-2xl shadow-xl">
-          <h2 className="text-center text-orange-500 text-2xl font-bold mb-6">
+        <div className="login-form-container">
+          <h2 className="login-title">
             Student Portal - Login
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              required
-            />
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
 
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              required
-            />
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your password"
+                required
+              />
+            </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-md font-medium transition"
-            >
-              {loading ? "Logging in..." : "Login"}
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
             </button>
           </form>
 
-          <p className="mt-4 text-sm text-center text-gray-600">
-            Don’t have an account?{" "}
-            <button
-              onClick={() => navigate("/register")}
-              className="text-orange-500 font-medium underline"
-            >
-              Register
-            </button>
-          </p>
+          <div className="signup-link">
+            Don't have an account? <Link to="/register">Sign up</Link>
+          </div>
         </div>
       </div>
     </>

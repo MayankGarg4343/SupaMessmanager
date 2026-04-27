@@ -18,7 +18,8 @@
   align-items: center;
   text-align: center;
   position: relative;
-  margin-top: 100px;
+  margin-top: 0;
+  padding-top: 0;
 }
 
 .welcome-container {
@@ -88,7 +89,7 @@
 }
 
 .student-heading h1 {
-  font-size: 100px;
+  font-size: 80px;
   font-weight: 500;
   text-transform: uppercase;
   color: #ff8800;
@@ -165,5 +166,28 @@
   padding-top: 1rem;
   font-size: 0.9rem;
   color: #aaa;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .explore-heading {
+    font-size: 2rem;
+  }
+  
+  .student-heading h1 {
+    font-size: 50px;
+  }
+  
+  .gallery-wrapper {
+    height: 400px;
+  }
+  
+  .footer-container {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
