@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PixelBlast from "../components/PixelBlast";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+
 import "../components/ContactUs.css";
 import { showToast } from "../utils/toast";
 
@@ -46,7 +46,8 @@ const ContactUs = () => {
       } else {
         showToast.error("Failed to send message.");
       }
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       showToast.error("Error connecting to server.");
     }
   };

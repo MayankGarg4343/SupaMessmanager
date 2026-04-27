@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion as Motion, AnimatePresence } from 'motion/react';
 import './TextCursor.css';
 
 const TextCursor = ({
@@ -79,6 +79,7 @@ const TextCursor = ({
     if (!container) return;
     container.addEventListener('mousemove', handleMouseMove);
     return () => container.removeEventListener('mousemove', handleMouseMove);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -95,7 +96,7 @@ const TextCursor = ({
       <div className="text-cursor-inner">
         <AnimatePresence>
           {trail.map(item => (
-            <motion.div
+            <Motion.div
               key={item.id}
               initial={{ opacity: 0, scale: 1, x: 0, y: 0, rotate: item.angle }}
               animate={{
@@ -133,7 +134,7 @@ const TextCursor = ({
               style={{ left: item.x, top: item.y }}
             >
               {text}
-            </motion.div>
+            </Motion.div>
           ))}
         </AnimatePresence>
       </div>

@@ -37,6 +37,7 @@ const FeedbackForm = () => {
         showToast.error("Failed to send feedback.");
       }
     } catch (error) {
+      console.error(error);
       showToast.error("Error connecting to server.");
     }
   };
