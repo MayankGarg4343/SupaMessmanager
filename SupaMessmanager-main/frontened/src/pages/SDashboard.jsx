@@ -1,10 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../utils/ThemeContext";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
+import { AreaChart, PremiumBarChart, Sparkline } from "../components/ui/chart";
+import { Skeleton } from "../components/ui/skeleton";
+import { showToast } from "../utils/toast";
+import {
+  LayoutDashboard,
+  BookOpen,
+  CalendarCheck,
+  MessageSquare,
+  AlertCircle,
+  BarChart3,
+  User,
+  LogOut,
+  Menu as MenuIcon,
+  X,
+  Sun,
+  Moon,
+  Clock,
+  ShieldCheck,
+  ChevronRight,
+  TrendingUp,
+  Sparkles,
+  Loader2,
+  Utensils,
+  CheckCircle2
+} from "lucide-react";
+import { API_URL } from "../config";
 
-// The base URL for your backend API
-const API_URL = "http://localhost:5000/api";
-
-// Helper to get Authorization header from stored token
 const getAuthHeader = () => {
   try {
     const token = localStorage.getItem("token");
@@ -15,19 +43,17 @@ const getAuthHeader = () => {
   }
 };
 
-// --- Utility Functions --- 
 const formatDate = (dateString) => {
   const options = { year: 'numeric', month: 'long', day: 'numeric' };
   return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
-// --- Page Components (defined within the same file) ---
-
-const DashboardPage = ({ user, onLogout }) => {
+// --- Dashboard Page (Overview) ---
+const DashboardPage = ({ user, onLogout, setActivePage }) => {
   const [data, setData] = useState({
     todayMenu: {},
     mealsBooked: [],
-    notices: ["Pizza Night this Saturday!", "🎉 Mess Fees Due by End of Week!"],
+    notices: ["Pizza Night this Saturday! 🍕", "🎉 Mess Fees Due by End of Week!"],
     yourStats: { mealsTaken: 0, foodSaved: 0, complaintsResolved: 0 }
   });
   const [loading, setLoading] = useState(true);
@@ -41,11 +67,7 @@ const DashboardPage = ({ user, onLogout }) => {
 
     const fetchData = async () => {
       try {
-        const [
-          menuRes,
-          bookingsRes,
-          complaintsRes
-        ] = await Promise.all([
+        const [menuRes, bookingsRes, complaintsRes] = await Promise.all([
           fetch(`${API_URL}/menu/${new Date().toISOString().split('T')[0]}`),
           fetch(`${API_URL}/bookings/${user._id}`, { headers: { ...getAuthHeader() } }),
           fetch(`${API_URL}/complaints/student/${user._id}`, { headers: { ...getAuthHeader() } })
@@ -57,11 +79,11 @@ const DashboardPage = ({ user, onLogout }) => {
 
         setData({
           todayMenu: menuData,
-          mealsBooked: bookingsData.length > 0 ? bookingsData[0].meals : [],
-          notices: ["Pizza Night this Saturday!", "🎉 Mess Fees Due by End of Week!"],
+          mealsBooked: bookingsData.length > 0 ? (bookingsData[0].meals || []) : [],
+          notices: ["Pizza Night this Saturday! 🍕", "🎉 Mess Fees Due by End of Week!"],
           yourStats: {
             mealsTaken: bookingsData.length,
-            foodSaved: bookingsData.length * 0.1, // Mock data
+            foodSaved: bookingsData.length * 0.1, // Mock formula
             complaintsResolved: complaintsData.filter(c => c.status === 'Resolved').length
           }
         });
@@ -75,80 +97,180 @@ const DashboardPage = ({ user, onLogout }) => {
     fetchData();
   }, [user]);
 
-  if (loading) return <div className="loading-state">Loading dashboard data...</div>;
-  if (error) return <div className="error-state">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-16 w-1/3" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+          <Skeleton className="h-40" />
+        </div>
+        <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  if (error) return <div className="text-destructive font-bold p-6">Error: {error}</div>;
 
   return (
-    <>
-      <header className="topbar">
-        <h1 style={{color:"#ff8800"}}>WELCOME, {user.name}</h1>
-        <button className="logout-btn" onClick={onLogout}>Logout</button>
-      </header>
-
-      {/* Cards Section */}
-      <section className="cards">
-        <div className="card highlight">
-          <h3>Today's Menu</h3>
-          {Object.keys(data.todayMenu).length > 0 ? (
-            <p>
-              🍲 <strong>Breakfast:</strong> {data.todayMenu.breakfast} <br />
-              🍛 <strong>Lunch:</strong> {data.todayMenu.lunch} <br />
-              🍽 <strong>Dinner:</strong> {data.todayMenu.dinner}
-            </p>
-          ) : (
-            <p>No menu available for today.</p>
-          )}
-        </div>
-
-        <div className="card">
-          <h3>Meal Booking</h3>
-          <p>
-            You have booked <strong>{data.mealsBooked.length > 0 ? data.mealsBooked.join(" & ") : "no meals"}</strong> today.
+    <div className="space-y-8 animate-page-enter page-enter-active">
+      
+      {/* Header Greeting */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-6">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
+            Welcome, {user.name} <Sparkles className="text-primary h-6 w-6 animate-pulse" />
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Check today's serving status, schedule your meals, and monitor dining analytics.
           </p>
-          <button className="btn">Manage Meals</button>
         </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setActivePage('Meal Booking')}>
+            Quick Book
+          </Button>
+          <Button variant="destructive" size="sm" onClick={onLogout} className="gap-2">
+            <LogOut size={14} /> Logout
+          </Button>
+        </div>
+      </div>
 
-        <div className="card">
-          <h3 style={{margin:"0px 50px"}}>Notices</h3>
-          <ul>
-            {data.notices.map((notice, index) => (
-              <li key={index}>{notice}</li>
-            ))}
-          </ul>
-        </div>
+      {/* Main Grid Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {/* Today's Menu */}
+        <Card className="border-primary/20 md:col-span-2 shadow-lg">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold flex items-center gap-2">
+                <BookOpen className="text-primary h-5 w-5" /> Today's Menu
+              </CardTitle>
+              <CardDescription>Daily meals for Chitkara Campus</CardDescription>
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setActivePage("Today's Menu")}>
+              View Details <ChevronRight size={14} />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {Object.keys(data.todayMenu).length > 0 ? (
+              <div className="grid grid-cols-3 gap-3 pt-2 text-center">
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/10">
+                  <div className="text-xs font-bold text-muted-foreground uppercase">Breakfast</div>
+                  <div className="text-sm font-semibold mt-1 text-foreground">{data.todayMenu.breakfast || "N/A"}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/10">
+                  <div className="text-xs font-bold text-muted-foreground uppercase">Lunch</div>
+                  <div className="text-sm font-semibold mt-1 text-foreground">{data.todayMenu.lunch || "N/A"}</div>
+                </div>
+                <div className="p-3 rounded-xl bg-muted/30 border border-border/10">
+                  <div className="text-xs font-bold text-muted-foreground uppercase">Dinner</div>
+                  <div className="text-sm font-semibold mt-1 text-foreground">{data.todayMenu.dinner || "N/A"}</div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">No menu uploaded for today.</p>
+            )}
+          </CardContent>
+        </Card>
 
-        <div className="card">
-          <h3 style={{margin:"0px 50px"}}>Feedback</h3>
-          <p>Help us improve your dining experience.</p>
-          <button className="btn">
-            Give Feedback
-          </button>
-        </div>
-      </section>
+        {/* Meal Booking Summary */}
+        <Card className="shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <CalendarCheck className="text-primary h-5 w-5" /> Booking Status
+            </CardTitle>
+            <CardDescription>Meals secured for today</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="text-sm">
+              {data.mealsBooked.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {data.mealsBooked.map((meal) => (
+                    <span key={meal} className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 border border-primary/20 text-primary">
+                      {meal}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No bookings recorded for today.</p>
+              )}
+            </div>
+          </CardContent>
+          <CardFooter className="pt-2">
+            <Button className="w-full text-xs font-bold" variant="secondary" size="sm" onClick={() => setActivePage("Meal Booking")}>
+              Manage Booking
+            </Button>
+          </CardFooter>
+        </Card>
 
-      {/* Analytics Section */}
-      <section className="analytics">
-        <h2>Your Statistics</h2>
-        <div className="analytics-cards">
-          <div className="analytics-card">
-            <h3>Meals Taken</h3>
-            <p>{data.yourStats.mealsTaken} this month</p>
-          </div>
-          <div className="analytics-card">
-            <h3>Food Saved</h3>
-            <p>{data.yourStats.foodSaved} kg avoided</p>
-          </div>
-          <div className="analytics-card">
-            <h3>Complaints Resolved</h3>
-            <p>{data.yourStats.complaintsResolved} resolved</p>
-          </div>
+        {/* Notice Board */}
+        <Card className="shadow-lg">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-bold flex items-center gap-2">
+              <AlertCircle className="text-primary h-5 w-5" /> Notices
+            </CardTitle>
+            <CardDescription>Announcements from Coordinator</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ul className="divide-y divide-border/20 text-xs px-6">
+              {data.notices.map((notice, idx) => (
+                <li key={idx} className="py-2.5 text-muted-foreground leading-relaxed">
+                  {notice}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Analytics Brief Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold tracking-tight">Your Monthly Footprint</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/10 shadow-md">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider">Meals Taken</CardDescription>
+              <CardTitle className="text-3xl font-black">{data.yourStats.mealsTaken}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <TrendingUp size={12} className="text-primary" /> Active billing cycle entries
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider">Food Saved</CardDescription>
+              <CardTitle className="text-3xl font-black">{data.yourStats.foodSaved.toFixed(1)} kg</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Estimated carbon reduction index</p>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-md">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs uppercase font-bold tracking-wider">Tickets Resolved</CardDescription>
+              <CardTitle className="text-3xl font-black">{data.yourStats.complaintsResolved}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground">Complaints settled by admin desk</p>
+            </CardContent>
+          </Card>
+
         </div>
-      </section>
-    </>
+      </div>
+
+    </div>
   );
 };
 
-const TodaysMenu = () => {
+// --- Menu View Subpage ---
+const TodaysMenuSub = () => {
   const [menu, setMenu] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -157,9 +279,7 @@ const TodaysMenu = () => {
     const fetchMenu = async () => {
       try {
         const res = await fetch(`${API_URL}/menu/${new Date().toISOString().split('T')[0]}`);
-        if (!res.ok) {
-          throw new Error("Menu not found for this date.");
-        }
+        if (!res.ok) throw new Error("Menu not found for this date.");
         const data = await res.json();
         setMenu(data);
       } catch (err) {
@@ -171,29 +291,40 @@ const TodaysMenu = () => {
     fetchMenu();
   }, []);
 
-  if (loading) return <div className="loading-state">Loading menu...</div>;
-  if (error) return <div className="error-state">Error: {error}</div>;
+  if (loading) return <Skeleton className="h-64 w-full" />;
+  if (error) return <div className="text-muted-foreground p-6 text-center">No menu available for today.</div>;
 
   return (
-    <div className="page-content">
-      <h1><span role="img" aria-label="menu">📖</span> Today's Menu</h1>
-      {menu ? (
-        <div className="menu-display">
-          <h3>{formatDate(menu.date)}</h3>
-          <p><strong>Breakfast:</strong> {menu.breakfast}</p>
-          <p><strong>Lunch:</strong> {menu.lunch}</p>
-          <p><strong>Dinner:</strong> {menu.dinner}</p>
+    <Card className="animate-page-enter page-enter-active">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BookOpen className="text-primary" /> Today's Serving Schedule
+        </CardTitle>
+        <CardDescription>{formatDate(menu.date)}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="divide-y divide-border/30">
+          <div className="py-4 flex justify-between items-center gap-4">
+            <div className="font-bold text-foreground">🍳 Breakfast</div>
+            <div className="text-muted-foreground text-sm">{menu.breakfast || "Not Available"}</div>
+          </div>
+          <div className="py-4 flex justify-between items-center gap-4">
+            <div className="font-bold text-foreground">🍛 Lunch</div>
+            <div className="text-muted-foreground text-sm">{menu.lunch || "Not Available"}</div>
+          </div>
+          <div className="py-4 flex justify-between items-center gap-4">
+            <div className="font-bold text-foreground">🍽 Dinner</div>
+            <div className="text-muted-foreground text-sm">{menu.dinner || "Not Available"}</div>
+          </div>
         </div>
-      ) : (
-        <p>No menu available for today.</p>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
-const MealBooking = ({ user }) => {
+// --- Booking Subpage ---
+const MealBookingSub = ({ user }) => {
   const [meals, setMeals] = useState([]);
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCheckboxChange = (e) => {
@@ -207,7 +338,7 @@ const MealBooking = ({ user }) => {
 
   const handleBooking = async () => {
     if (!user) {
-      setMessage("Please log in to book meals.");
+      showToast.error("Please log in to book meals.");
       return;
     }
     try {
@@ -222,43 +353,55 @@ const MealBooking = ({ user }) => {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to book meals.");
-      }
-      setMessage(data.message);
+      if (!res.ok) throw new Error(data.error || "Failed to book meals.");
+      showToast.success(data.message || "Meals booked successfully!");
     } catch (err) {
-      setMessage(err.message);
+      showToast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-content">
-      <h1><span role="img" aria-label="booking">✅</span> Meal Booking</h1>
-      <p>Select your meals for today.</p>
-      <div className="booking-form">
-        <label>
-          <input type="checkbox" name="meals" value="Breakfast" onChange={handleCheckboxChange} /> Breakfast
-        </label>
-        <label>
-          <input type="checkbox" name="meals" value="Lunch" onChange={handleCheckboxChange} /> Lunch
-        </label>
-        <label>
-          <input type="checkbox" name="meals" value="Dinner" onChange={handleCheckboxChange} /> Dinner
-        </label>
-        <button className="btn" onClick={handleBooking} disabled={loading || !user}>
-          {loading ? "Booking..." : "Book Meals"}
-        </button>
-      </div>
-      {message && <div className="status-message">{message}</div>}
-    </div>
+    <Card className="animate-page-enter page-enter-active max-w-xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CalendarCheck className="text-primary" /> Daily Meal Planner
+        </CardTitle>
+        <CardDescription>Select serving segments you intend to consume today.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid grid-cols-1 gap-3">
+          {["Breakfast", "Lunch", "Dinner"].map((meal) => (
+            <label
+              key={meal}
+              className="flex items-center justify-between p-4 rounded-xl border border-border/60 bg-muted/10 cursor-pointer hover:border-primary/40 hover:bg-muted/20 transition-all select-none"
+            >
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  value={meal}
+                  onChange={handleCheckboxChange}
+                  className="h-5 w-5 accent-primary rounded cursor-pointer"
+                />
+                <span className="font-bold text-sm text-foreground">{meal} Serving</span>
+              </div>
+              <Clock size={16} className="text-muted-foreground" />
+            </label>
+          ))}
+        </div>
+        
+        <Button onClick={handleBooking} disabled={loading || !user} className="w-full font-bold">
+          {loading ? "Saving choices..." : "Confirm Daily Schedule"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 
-const FeedbackPage = ({ user }) => {
+// --- Feedback Subpage ---
+const FeedbackPageSub = ({ user }) => {
   const [feedbackData, setFeedbackData] = useState({ name: '', email: '', rating: 5, feedback: '' });
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -274,7 +417,7 @@ const FeedbackPage = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      setMessage("Please log in to submit feedback.");
+      showToast.error("Please log in to submit feedback.");
       return;
     }
     try {
@@ -285,50 +428,73 @@ const FeedbackPage = ({ user }) => {
         body: JSON.stringify(feedbackData),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to submit feedback.");
-      }
-      setMessage(data.message);
+      if (!res.ok) throw new Error(data.error || "Failed to submit feedback.");
+      showToast.success(data.message || "Feedback submitted!");
+      setFeedbackData(prev => ({ ...prev, rating: 5, feedback: '' }));
     } catch (err) {
-      setMessage(err.message);
+      showToast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-content">
-      <h1><span role="img" aria-label="feedback">📝</span> Feedback</h1>
-      <p>Share your feedback on the food and services.</p>
-      <form onSubmit={handleSubmit} className="form-container">
-        <label>
-          Name:
-          <input type="text" name="name" value={feedbackData.name} onChange={handleChange} required disabled={!!user} />
-        </label>
-        <label>
-          Email:
-          <input type="email" name="email" value={feedbackData.email} onChange={handleChange} required disabled={!!user} />
-        </label>
-        <label>
-          Rating:
-          <input type="number" name="rating" min="1" max="5" value={feedbackData.rating} onChange={handleChange} required />
-        </label>
-        <label>
-          Feedback:
-          <textarea name="feedback" value={feedbackData.feedback} onChange={handleChange} required />
-        </label>
-        <button type="submit" className="btn" disabled={loading || !user}>
-          {loading ? "Submitting..." : "Submit Feedback"}
-        </button>
-      </form>
-      {message && <div className="status-message">{message}</div>}
-    </div>
+    <Card className="animate-page-enter page-enter-active max-w-xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <MessageSquare className="text-primary" /> Service Feedback
+        </CardTitle>
+        <CardDescription>Rate your overall dining experience today.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Name</label>
+              <Input type="text" name="name" value={feedbackData.name} onChange={handleChange} required disabled />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-muted-foreground uppercase">Email</label>
+              <Input type="email" name="email" value={feedbackData.email} onChange={handleChange} required disabled />
+            </div>
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Quality Rating (1-5)</label>
+            <Input
+              type="number"
+              name="rating"
+              min="1"
+              max="5"
+              value={feedbackData.rating}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Detailed Comments</label>
+            <Textarea
+              name="feedback"
+              value={feedbackData.feedback}
+              onChange={handleChange}
+              placeholder="Tell us what you liked or how we can improve..."
+              required
+            />
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full font-bold">
+            {loading ? "Submitting..." : "Submit Feedback"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
-const Complaints = ({ user }) => {
+// --- Complaints Subpage ---
+const ComplaintsSub = ({ user }) => {
   const [complaintData, setComplaintData] = useState({ subject: '', message: '' });
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -338,7 +504,7 @@ const Complaints = ({ user }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) {
-      setMessage("Please log in to submit a complaint.");
+      showToast.error("Please log in to submit complaints.");
       return;
     }
     try {
@@ -354,74 +520,66 @@ const Complaints = ({ user }) => {
         }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to submit complaint.");
-      }
-      setMessage(data.message);
+      if (!res.ok) throw new Error(data.error || "Failed to file complaint.");
+      showToast.success(data.message || "Complaint filed!");
+      setComplaintData({ subject: '', message: '' });
     } catch (err) {
-      setMessage(err.message);
+      showToast.error(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="page-content">
-      <h1><span role="img" aria-label="complaints">⚠️</span> Complaints</h1>
-      <p>Submit a new complaint.</p>
-      <form onSubmit={handleSubmit} className="form-container">
-        <label>
-          Subject:
-          <input type="text" name="subject" value={complaintData.subject} onChange={handleChange} required />
-        </label>
-        <label>
-          Message:
-          <textarea name="message" value={complaintData.message} onChange={handleChange} required />
-        </label>
-        <button type="submit" className="btn" disabled={loading || !user}>
-          {loading ? "Submitting..." : "Submit Complaint"}
-        </button>
-      </form>
-      {message && <div className="status-message">{message}</div>}
-    </div>
+    <Card className="animate-page-enter page-enter-active max-w-xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <AlertCircle className="text-primary" /> Lodging Complaint Ticket
+        </CardTitle>
+        <CardDescription>File issues related to food hygiene, quantity, or delays.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Subject</label>
+            <Input
+              type="text"
+              name="subject"
+              value={complaintData.subject}
+              onChange={handleChange}
+              placeholder="e.g. Hygiene concerns on Friday lunch"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-muted-foreground uppercase">Complaint Description</label>
+            <Textarea
+              name="message"
+              value={complaintData.message}
+              onChange={handleChange}
+              placeholder="Provide exact details regarding timings, servers, or plates..."
+              required
+            />
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full font-bold">
+            {loading ? "Submitting Ticket..." : "Submit Complaint Ticket"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
 
-// Lightweight SVG Bar Chart for student analytics
-function SBarChart({ data, height = 160, barColor = "#ff8800", labelColor = "#ccc" }) {
-  const max = Math.max(1, ...data.map(d => d.value));
-  const barW = Math.max(16, Math.floor(240 / Math.max(1, data.length)));
-  const gap = 10;
-  const width = data.length * (barW + gap) - gap;
-  return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet">
-      {data.map((d, i) => {
-        const h = Math.round((d.value / max) * (height - 36));
-        const x = i * (barW + gap);
-        const y = height - h - 18;
-        return (
-          <g key={d.label} transform={`translate(${x},0)`}>
-            <rect x={0} y={y} width={barW} height={h} rx={6} fill={barColor} />
-            <text x={barW / 2} y={height - 4} textAnchor="middle" fontSize="10" fill={labelColor}>{d.label}</text>
-            <text x={barW / 2} y={y - 4} textAnchor="middle" fontSize="11" fill={labelColor}>{d.value}</text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-const Analytics = ({ user }) => {
-  const [mealsByType, setMealsByType] = useState([
-    { label: 'Breakfast', value: 0 },
-    { label: 'Lunch', value: 0 },
-    { label: 'Dinner', value: 0 },
-  ]);
-  const [complaintsStatus, setComplaintsStatus] = useState([
-    { label: 'Pending', value: 0 },
-    { label: 'In Progress', value: 0 },
-    { label: 'Resolved', value: 0 },
-  ]);
+// --- Analytics Subpage ---
+const AnalyticsSub = ({ user }) => {
+  const [mealsByType, setMealsByType] = useState([]);
+  const [complaintsStatus, setComplaintsStatus] = useState([]);
+  const [weeklyTrend, setWeeklyTrend] = useState([]);
+  const [recentLogs, setRecentLogs] = useState([]);
+  const [sparklinesData, setSparklinesData] = useState({ bookingsTrend: [], mealsTrend: [], ticketsTrend: [] });
+  const [stats, setStats] = useState({ totalBookings: 0, totalMeals: 0, totalComplaints: 0, resolvedComplaints: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -429,7 +587,6 @@ const Analytics = ({ user }) => {
     if (!user) return;
     const load = async () => {
       try {
-        // Fetch this student's bookings and complaints
         const [bookingsRes, complaintsRes] = await Promise.all([
           fetch(`${API_URL}/bookings/${user._id}`),
           fetch(`${API_URL}/complaints/student/${user._id}`),
@@ -437,7 +594,10 @@ const Analytics = ({ user }) => {
         const bookings = bookingsRes.ok ? await bookingsRes.json() : [];
         const complaints = complaintsRes.ok ? await complaintsRes.json() : [];
 
-        // Meals by type across student's bookings
+        // Sort bookings by date descending for recent logs
+        const sortedBookings = [...bookings].sort((a, b) => new Date(b.date) - new Date(a.date));
+        setRecentLogs(sortedBookings.slice(0, 5));
+
         const mealsBy = { Breakfast: 0, Lunch: 0, Dinner: 0 };
         bookings.forEach(b => (b.meals || []).forEach(m => { if (mealsBy[m] !== undefined) mealsBy[m]++; }));
         setMealsByType([
@@ -446,7 +606,6 @@ const Analytics = ({ user }) => {
           { label: 'Dinner', value: mealsBy.Dinner },
         ]);
 
-        // Complaints status distribution for this student
         const compBy = { 'Pending': 0, 'In Progress': 0, 'Resolved': 0 };
         complaints.forEach(c => { if (compBy[c.status] !== undefined) compBy[c.status]++; });
         setComplaintsStatus([
@@ -454,6 +613,49 @@ const Analytics = ({ user }) => {
           { label: 'In Progress', value: compBy['In Progress'] },
           { label: 'Resolved', value: compBy['Resolved'] },
         ]);
+
+        // Calculate stats
+        const totalMeals = bookings.reduce((sum, b) => sum + (b.meals || []).length, 0);
+        const resolved = complaints.filter(c => c.status === 'Resolved').length;
+        setStats({
+          totalBookings: bookings.length,
+          totalMeals: totalMeals,
+          totalComplaints: complaints.length,
+          resolvedComplaints: resolved
+        });
+
+        // 7-Day Trend Calculations (ending today)
+        const days = [...Array(7)].map((_, idx) => {
+          const d = new Date();
+          d.setDate(d.getDate() - (6 - idx));
+          return d.toISOString().split("T")[0];
+        });
+
+        const weeklyMealsData = days.map(d => {
+          const booking = bookings.find(b => b.date === d);
+          return {
+            label: d.split("-").slice(1).join("/"),
+            value: booking ? (booking.meals || []).length : 0
+          };
+        });
+        setWeeklyTrend(weeklyMealsData);
+
+        // Generate Sparklines
+        const bookingsSpark = days.map(d => bookings.some(b => b.date === d) ? 1 : 0);
+        const mealsSpark = days.map(d => {
+          const booking = bookings.find(b => b.date === d);
+          return booking ? (booking.meals || []).length : 0;
+        });
+        const ticketsSpark = days.map(d => {
+          return complaints.filter(c => new Date(c.createdAt).toISOString().split("T")[0] === d).length;
+        });
+
+        setSparklinesData({
+          bookingsTrend: bookingsSpark,
+          mealsTrend: mealsSpark,
+          ticketsTrend: ticketsSpark
+        });
+
       } catch (e) {
         setError(e.message);
       } finally {
@@ -463,51 +665,258 @@ const Analytics = ({ user }) => {
     load();
   }, [user]);
 
-  return (
-    <div className="page-content">
-      <h1><span role="img" aria-label="analytics">📊</span> Analytics</h1>
-      {loading && <div className="loading-state">Loading analytics...</div>}
-      {error && <div className="error-state">Error: {error}</div>}
-      {!loading && !error && (
-        <>
-          <div className="analytics-cards">
-            <div className="analytics-card">
-              <h3>Meals You've Booked (All Time)</h3>
-              <SBarChart data={mealsByType} />
-            </div>
-            <div className="analytics-card">
-              <h3>Your Complaints Status</h3>
-              <SBarChart data={complaintsStatus} />
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-const Profile = ({ user }) => {
-  if (!user) return <div className="loading-state">Loading profile...</div>;
-
-  return (
-    <div className="page-content">
-      <h1><span role="img" aria-label="profile">👤</span> Profile</h1>
-      <div className="profile-details">
-        <p><strong>Name:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Registered On:</strong> {formatDate(user.createdAt)}</p>
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-32 w-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Skeleton className="h-64 md:col-span-2" />
+          <Skeleton className="h-64" />
+        </div>
       </div>
+    );
+  }
+
+  if (error) return <div className="text-destructive font-bold p-6">Error: {error}</div>;
+
+  return (
+    <div className="space-y-8 animate-page-enter page-enter-active">
+      {/* Title Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-6">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
+            <BarChart3 className="text-primary" /> Personal Analytics
+          </h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            Track your dining footprints, meal reservation stats, and ticket resolutions.
+          </p>
+        </div>
+      </div>
+
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <Card className="bg-card/25 border border-border/40 backdrop-blur-xs select-none hover:border-primary/30 hover:scale-[1.01] transition-all duration-300">
+          <CardContent className="p-6 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Dining Logs</p>
+                <h3 className="text-3xl font-extrabold text-foreground">{stats.totalBookings}</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold">Days with reserved slots</p>
+              </div>
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/15 text-primary">
+                <CalendarCheck size={20} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-border/10">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">7d Activity</span>
+              <Sparkline data={sparklinesData.bookingsTrend} strokeColor="var(--primary)" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-card/25 border border-border/40 backdrop-blur-xs select-none hover:border-orange-500/30 hover:scale-[1.01] transition-all duration-300">
+          <CardContent className="p-6 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Meals Reserved</p>
+                <h3 className="text-3xl font-extrabold text-foreground">{stats.totalMeals}</h3>
+                <p className="text-[10px] text-muted-foreground font-semibold">Total segmented servings</p>
+              </div>
+              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/15 text-orange-500">
+                <Utensils size={20} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-border/10">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">7d Volume</span>
+              <Sparkline data={sparklinesData.mealsTrend} strokeColor="#f97316" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card/25 border border-border/40 backdrop-blur-xs select-none hover:border-amber-500/30 hover:scale-[1.01] transition-all duration-300">
+          <CardContent className="p-6 flex flex-col justify-between h-full gap-4">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Tickets Resolved</p>
+                <h3 className="text-3xl font-extrabold text-foreground">
+                  {stats.resolvedComplaints} <span className="text-sm font-semibold text-muted-foreground">/ {stats.totalComplaints}</span>
+                </h3>
+                <p className="text-[10px] text-muted-foreground font-semibold">Resolved issues backlog</p>
+              </div>
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/15 text-amber-500">
+                <CheckCircle2 size={20} />
+              </div>
+            </div>
+            <div className="flex items-center justify-between pt-3 border-t border-border/10">
+              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">7d Lodges</span>
+              <Sparkline data={sparklinesData.ticketsTrend} strokeColor="#fbbf24" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Charts & History section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: Weekly consumption area chart */}
+        <Card className="bg-card/20 border border-border/40 backdrop-blur-xs select-none lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <TrendingUp size={16} className="text-primary" /> Weekly Consumption Trend
+            </CardTitle>
+            <CardDescription>Number of meals booked daily (last 7 days)</CardDescription>
+          </CardHeader>
+          <CardContent className="pb-6">
+            <AreaChart data={weeklyTrend} height={200} strokeColor="var(--primary)" />
+          </CardContent>
+        </Card>
+
+        {/* Right Column: Mini distribution summaries */}
+        <div className="flex flex-col gap-6">
+          <Card className="bg-card/20 border border-border/40 backdrop-blur-xs select-none flex-grow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Meals Booked By Segment</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <PremiumBarChart data={mealsByType} height={140} />
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/20 border border-border/40 backdrop-blur-xs select-none flex-grow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Lodged Tickets Distribution</CardTitle>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <PremiumBarChart data={complaintsStatus} height={140} barColor="#fb923c" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Recent Activity Table */}
+      <Card className="bg-card/20 border border-border/40 backdrop-blur-xs">
+        <CardHeader>
+          <CardTitle className="text-base">Recent Dining History</CardTitle>
+          <CardDescription>Details of your latest meal bookings and segments</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border/30">
+                  <TableHead className="w-[140px] font-bold text-xs uppercase text-muted-foreground">Date</TableHead>
+                  <TableHead className="font-bold text-xs uppercase text-muted-foreground">Segments Booked</TableHead>
+                  <TableHead className="w-[140px] font-bold text-xs uppercase text-muted-foreground">Total Servings</TableHead>
+                  <TableHead className="w-[140px] font-bold text-xs uppercase text-muted-foreground text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentLogs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-6 text-muted-foreground text-sm">
+                      No recent bookings found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  recentLogs.map((log) => {
+                    const isPast = new Date(log.date) < new Date(new Date().toDateString());
+                    return (
+                      <TableRow key={log._id || log.id} className="border-border/20 hover:bg-muted/10 transition-colors">
+                        <TableCell className="font-bold text-sm text-foreground">
+                          {new Date(log.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            {(log.meals || []).map((meal) => {
+                              const colors = {
+                                Breakfast: "bg-amber-500/10 border-amber-500/15 text-amber-500",
+                                Lunch: "bg-primary/10 border-primary/15 text-primary",
+                                Dinner: "bg-indigo-500/10 border-indigo-500/15 text-indigo-500"
+                              };
+                              return (
+                                <span
+                                  key={meal}
+                                  className={`px-2 py-0.5 rounded-md border text-[10px] font-bold ${colors[meal] || "bg-muted text-muted-foreground"}`}
+                                >
+                                  {meal}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-bold text-sm text-foreground">
+                          {log.meals?.length || 0}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                            isPast 
+                              ? "bg-muted/30 border-border/30 text-muted-foreground"
+                              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.1)]"
+                          }`}>
+                            {isPast ? "Completed" : "Scheduled"}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-// --- Main App Component ---
+// --- Profile Subpage ---
+const ProfileSub = ({ user }) => {
+  if (!user) return <Skeleton className="h-48 w-full" />;
 
+  return (
+    <Card className="animate-page-enter page-enter-active max-w-xl">
+      <CardHeader className="flex flex-row items-center gap-4 pb-4">
+        <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-3xl">
+          🎓
+        </div>
+        <div>
+          <CardTitle>{user.name}</CardTitle>
+          <CardDescription>Student Resident profile</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-2">
+        <div className="divide-y divide-border/20 text-sm">
+          <div className="py-3 flex justify-between">
+            <span className="text-muted-foreground font-semibold">Registered Email</span>
+            <span className="font-bold text-foreground">{user.email}</span>
+          </div>
+          <div className="py-3 flex justify-between">
+            <span className="text-muted-foreground font-semibold">Account Status</span>
+            <span className="font-bold text-emerald-500 flex items-center gap-1.5">
+              <ShieldCheck size={14} /> Active Resident
+            </span>
+          </div>
+          <div className="py-3 flex justify-between">
+            <span className="text-muted-foreground font-semibold">Registered On</span>
+            <span className="font-bold text-foreground">{formatDate(user.createdAt)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// --- Main Student Dashboard Component ---
 function SDashboard() {
   const [currentPage, setCurrentPage] = useState('Dashboard');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const initUser = async () => {
@@ -521,7 +930,7 @@ function SDashboard() {
         const normalized = { ...parsed, _id: parsed?._id || parsed?.id };
         setUser(normalized);
 
-        // Optionally enrich with createdAt from server list
+        // enriquecimiento de perfil
         try {
           const res = await fetch(`${API_URL}/students`);
           if (res.ok) {
@@ -533,8 +942,8 @@ function SDashboard() {
           }
         } catch (err) { void err; }
       } catch (err) {
-        console.error('Failed to parse stored student:', err);
-        window.location.href = '/login';
+        console.error('Failed to parse student session:', err);
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -543,447 +952,159 @@ function SDashboard() {
   }, [navigate]);
 
   const handleLogout = () => {
-    try {
-      localStorage.removeItem('student');
-      localStorage.removeItem('token');
-      setUser(null);
-      // Use React Router navigation instead of hard redirect
-      navigate('/');
-    } catch (err) { void err; }
+    localStorage.removeItem('student');
+    localStorage.removeItem('token');
+    setUser(null);
+    navigate('/');
   };
 
-  if (loading) return <div className="full-screen-loader">Loading user data...</div>;
-  if (!user) return null; // Or show a message while redirecting
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <Loader2 className="animate-spin text-primary h-10 w-10" />
+        <p className="text-muted-foreground text-sm font-bold">Synchronizing account...</p>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const sidebarItems = [
+    { name: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+    { name: "Today's Menu", icon: <BookOpen size={18} /> },
+    { name: 'Meal Booking', icon: <CalendarCheck size={18} /> },
+    { name: 'Feedback', icon: <MessageSquare size={18} /> },
+    { name: 'Complaints', icon: <AlertCircle size={18} /> },
+    { name: 'Analytics', icon: <BarChart3 size={18} /> },
+    { name: 'Profile', icon: <User size={18} /> },
+  ];
 
   const renderPage = () => {
     switch (currentPage) {
       case 'Dashboard':
-        return <DashboardPage user={user} onLogout={handleLogout} />;
-      case 'Today\'s Menu':
-        return <TodaysMenu />;
+        return <DashboardPage user={user} onLogout={handleLogout} setActivePage={setCurrentPage} />;
+      case "Today's Menu":
+        return <TodaysMenuSub />;
       case 'Meal Booking':
-        return <MealBooking user={user} />;
+        return <MealBookingSub user={user} />;
       case 'Feedback':
-        return <FeedbackPage user={user} />;
+        return <FeedbackPageSub user={user} />;
       case 'Complaints':
-        return <Complaints user={user} />;
+        return <ComplaintsSub user={user} />;
       case 'Analytics':
-        return <Analytics user={user} />;
+        return <AnalyticsSub user={user} />;
       case 'Profile':
-        return <Profile user={user} />;
+        return <ProfileSub user={user} />;
       default:
-        return <DashboardPage user={user} onLogout={handleLogout} />;
+        return <DashboardPage user={user} onLogout={handleLogout} setActivePage={setCurrentPage} />;
     }
   };
 
   return (
-    <>
-      <style>
-        {`
-          .dashboard {
-            display: flex;
-            background: var(--bg-dark);
-            color: var(--text-main);
-            min-height: 100vh;
-            font-family: 'Inter', sans-serif;
-          }
+    <div className="min-h-screen flex bg-background text-foreground transition-colors duration-300">
+      
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-border/40 bg-card/20 backdrop-blur-md p-6 fixed h-full left-0 top-0 z-40">
+        <div className="pb-8 border-b border-border/40 mb-6 flex items-center justify-between">
+          <span className="text-xl font-bold tracking-tight text-foreground">
+            Mess<span className="text-primary">Mate</span>
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-2 py-0.5 rounded-full bg-muted/40 border border-border/20">
+            Student
+          </span>
+        </div>
 
-          /* Sidebar */
-          .sidebar {
-            width: 260px;
-            background: var(--bg-card);
-            backdrop-filter: blur(16px);
-            border-right: 1px solid var(--border-glass);
-            padding: 2rem 1.5rem;
-            position: fixed;
-            height: 100vh;
-            left: 0;
-            top: 0;
-            z-index: 50;
-          }
+        {/* Navigation list */}
+        <nav className="flex-grow space-y-1.5">
+          {sidebarItems.map((item) => (
+            <button
+              key={item.name}
+              onClick={() => setCurrentPage(item.name)}
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold tracking-wide transition-all cursor-pointer ${
+                currentPage === item.name
+                  ? 'bg-primary/10 border-l-4 border-primary text-primary'
+                  : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+              }`}
+            >
+              {item.icon}
+              {item.name}
+            </button>
+          ))}
+        </nav>
 
-          .sidebar .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 2.5rem;
-            color: var(--text-main);
-          }
-          
-          .sidebar .logo span {
-            background: linear-gradient(135deg, var(--accent-orange), var(--accent-amber));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
+        {/* User context footer */}
+        <div className="pt-6 border-t border-border/40 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-xl border border-border/40 hover:bg-muted/40 text-foreground transition-all cursor-pointer"
+            >
+              {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <span className="text-xs text-muted-foreground font-semibold truncate max-w-[120px]">{user.name}</span>
+          </div>
+          <Button variant="destructive" size="sm" className="w-full gap-2 font-bold" onClick={handleLogout}>
+            <LogOut size={14} /> Logout
+          </Button>
+        </div>
+      </aside>
 
-          .sidebar .menu {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-
-          .sidebar .menu li {
-            padding: 0.8rem 1.2rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            color: var(--text-muted);
-          }
-
-          .sidebar .menu li:hover,
-          .sidebar .menu li.active {
-            background: rgba(249, 115, 22, 0.1);
-            color: var(--accent-orange);
-            transform: translateX(4px);
-          }
-
-          /* Main Content */
-          .main-content {
-            margin-left: 260px;
-            flex: 1;
-            padding: 2.5rem;
-            max-width: 1400px;
-          }
-
-          /* Topbar */
-          .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2.5rem;
-            position: sticky;
-            top: 0;
-            z-index: 40;
-            backdrop-filter: blur(12px);
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-glass);
-          }
-
-          .topbar h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            margin: 0;
-            background: linear-gradient(135deg, var(--accent-orange), var(--accent-amber));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-          }
-
-          .logout-btn {
-            background: linear-gradient(135deg, var(--accent-orange), var(--accent-amber));
-            border: none;
-            color: #000;
-            padding: 0.7rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
-          }
-
-          .logout-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
-          }
-
-          /* Cards */
-          .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2.5rem;
-          }
-
-          .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
-            padding: 1.8rem;
-            border-radius: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            position: relative;
-            overflow: hidden;
-          }
-
-          .card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(249, 115, 22, 0.3);
-          }
-
-          .card.highlight {
-            border: 1px solid var(--accent-orange);
-            box-shadow: 0 8px 22px rgba(249, 115, 22, 0.15);
-          }
-
-          .card.highlight h3 {
-            color: var(--accent-orange);
-          }
-
-          .card h3 {
-            color: var(--text-main);
-            font-size: 1.25rem;
-            margin-bottom: 1rem;
-            font-weight: 600;
-          }
-
-          .card p {
-            color: var(--text-muted);
-            line-height: 1.6;
-          }
-
-          .btn {
-            background: linear-gradient(135deg, var(--accent-orange), var(--accent-amber));
-            border: none;
-            color: #000;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
-            margin-top: 1.5rem;
-            display: inline-block;
-          }
-
-          .btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
-          }
-          
-          .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            background: #374151;
-            box-shadow: none;
-            color: #9ca3af;
-          }
-
-          /* Analytics */
-          .analytics h2 {
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
-            font-weight: 600;
-            font-size: 1.25rem;
-          }
-
-          .analytics-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-          }
-
-          .analytics-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-glass);
-            padding: 2rem;
-            border-radius: 16px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-          }
-          
-          .analytics-card:hover {
-            border-color: rgba(249, 115, 22, 0.3);
-            transform: translateY(-4px);
-          }
-
-          .analytics-card h3 {
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            margin-bottom: 0.8rem;
-            font-weight: 500;
-          }
-
-          .analytics-card p {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--accent-orange);
-            margin: 0;
-          }
-
-          .page-content {
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            padding: 2.5rem;
-            border-radius: 16px;
-            border: 1px solid var(--border-glass);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-          }
-
-          .page-content h1 {
-            font-size: 2.2rem;
-            margin-top: 0;
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-weight: 700;
-          }
-
-          .page-content p {
-            color: var(--text-muted);
-            font-size: 1.05rem;
-            margin-bottom: 2rem;
-          }
-
-          .status-message {
-            margin-top: 1.5rem;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            background: rgba(249, 115, 22, 0.1);
-            border: 1px solid var(--accent-orange);
-            color: var(--accent-orange);
-            font-weight: 600;
-          }
-
-          .form-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            max-width: 600px;
-          }
-
-          .form-container label {
-            display: flex;
-            flex-direction: column;
-            color: var(--text-muted);
-            font-weight: 500;
-            gap: 0.5rem;
-          }
-
-          .form-container input, .form-container textarea {
-            padding: 0.8rem 1rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-glass);
-            background: rgba(0, 0, 0, 0.2);
-            color: var(--text-main);
-            transition: all 0.3s ease;
-            font-family: inherit;
-          }
-          
-          .form-container input:focus, .form-container textarea:focus {
-            outline: none;
-            border-color: var(--accent-orange);
-            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
-          }
-
-          .booking-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-glass);
-            max-width: 500px;
-          }
-
-          .booking-form label {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: var(--text-main);
-            font-weight: 500;
-            font-size: 1.1rem;
-            cursor: pointer;
-          }
-          
-          .booking-form input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--accent-orange);
-            cursor: pointer;
-          }
-
-          .menu-display {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-glass);
-            padding: 2rem;
-            border-radius: 16px;
-          }
-          
-          .menu-display h3 {
-            color: var(--accent-orange);
-            font-size: 1.4rem;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-          }
-          
-          .menu-display p {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-          }
-          
-          .menu-display strong {
-            color: var(--text-main);
-          }
-
-          .profile-details p {
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            color: var(--text-muted);
-            background: rgba(255, 255, 255, 0.02);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            border: 1px solid var(--border-glass);
-          }
-
-          .profile-details strong {
-            color: var(--text-main);
-            margin-right: 8px;
-          }
-
-          /* Responsive Media Queries */
-          @media (max-width: 768px) {
-            .dashboard { flex-direction: column; }
-            .sidebar {
-              width: 100%;
-              height: auto;
-              position: relative;
-              border-right: none;
-              border-bottom: 1px solid var(--border-glass);
-              padding: 1.5rem;
-              z-index: 10;
-            }
-            .sidebar .logo { margin-bottom: 1.5rem; }
-            .sidebar .menu { flex-direction: row; flex-wrap: wrap; justify-content: center; }
-            .sidebar .menu li { padding: 0.6rem 1rem; font-size: 0.9rem; }
-            .main-content { margin-left: 0; padding: 1.5rem; }
-            .topbar { flex-direction: column; align-items: flex-start; gap: 1rem; }
-            .cards { grid-template-columns: 1fr; }
-            .profile-details { grid-template-columns: 1fr; }
-          }
-        `}
-      </style>
-      <div className="dashboard">
-        {/* Sidebar */}
-        <aside className="sidebar">
-          <h2 className="logo"><span>Mess</span>Mate</h2>
-          <ul className="menu">
-            <li className={currentPage === 'Dashboard' ? 'active' : ''} onClick={() => setCurrentPage('Dashboard')}>Dashboard</li>
-            <li className={currentPage === 'Today\'s Menu' ? 'active' : ''} onClick={() => setCurrentPage('Today\'s Menu')}>Today's Menu</li>
-            <li className={currentPage === 'Meal Booking' ? 'active' : ''} onClick={() => setCurrentPage('Meal Booking')}>Meal Booking</li>
-            <li className={currentPage === 'Feedback' ? 'active' : ''} onClick={() => setCurrentPage('Feedback')}>Feedback</li>
-            <li className={currentPage === 'Complaints' ? 'active' : ''} onClick={() => setCurrentPage('Complaints')}>Complaints</li>
-            <li className={currentPage === 'Analytics' ? 'active' : ''} onClick={() => setCurrentPage('Analytics')}>Analytics</li>
-            <li className={currentPage === 'Profile' ? 'active' : ''} onClick={() => setCurrentPage('Profile')}>Profile</li>
-          </ul>
-        </aside>
-
-        {/* Main Content */}
-        <main className="main-content">
-          {renderPage()}
-        </main>
+      {/* Mobile Top Header */}
+      <div className="md:hidden fixed top-0 left-0 w-full z-45 flex items-center justify-between bg-card/70 border-b border-border/40 backdrop-blur-md px-6 py-4">
+        <span className="text-lg font-bold text-foreground">
+          Mess<span className="text-primary">Mate</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl border border-border/40 hover:bg-muted/40 text-foreground transition-all cursor-pointer"
+          >
+            {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 hover:bg-muted/40 rounded-xl text-foreground"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <MenuIcon size={20} />}
+          </button>
+        </div>
       </div>
-    </>
+
+      {/* Mobile Menu Panel */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-md pt-20 px-6 flex flex-col justify-between pb-8">
+          <nav className="space-y-2">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  setCurrentPage(item.name);
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
+                  currentPage === item.name
+                    ? 'bg-primary/10 border-l-4 border-primary text-primary'
+                    : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
+                }`}
+              >
+                {item.icon}
+                {item.name}
+              </button>
+            ))}
+          </nav>
+          <Button variant="destructive" className="w-full gap-2 font-bold" onClick={handleLogout}>
+            <LogOut size={16} /> Logout
+          </Button>
+        </div>
+      )}
+
+      {/* Page Content Container */}
+      <main className="flex-grow md:ml-64 p-6 md:p-12 pt-24 md:pt-12 max-w-7xl overflow-hidden">
+        {renderPage()}
+      </main>
+
+    </div>
   );
 }
 
 export default SDashboard;
-
-// now the student is able to see the menu which is being updated by the admin.

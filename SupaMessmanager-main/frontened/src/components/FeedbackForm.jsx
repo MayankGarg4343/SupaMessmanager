@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../components/FeedbackForm.css";
 import PixelBlast from "../components/PixelBlast";
 import { showToast } from "../utils/toast";
+import { API_URL } from "../config";
 
 const FeedbackForm = () => {
   const [formData, setFormData] = useState({
@@ -18,7 +19,7 @@ const FeedbackForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5000/api/feedback", {
+      const response = await fetch(`${API_URL}/feedback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),

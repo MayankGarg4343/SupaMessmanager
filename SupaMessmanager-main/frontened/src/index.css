@@ -1,42 +1,182 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap');
+
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
 
 :root {
-  --bg-dark: #0b0f19;
-  --bg-card: rgba(17, 24, 39, 0.7);
-  --accent-orange: #f97316;
-  --accent-amber: #f59e0b;
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 24.6 95% 53.1%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 24.6 95% 53.1%;
+  --radius: 0.85rem;
+}
+
+:root:not(.dark) {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 24.6 95% 53.1%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 10% 3.9%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 10% 3.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 24.6 95% 53.1%;
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
 }
 
-/* Sleek Scrollbar */
+/* Elegant Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-dark);
+  background: hsl(var(--background));
 }
 ::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 4px;
+  background: hsl(var(--muted));
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-orange);
+  background: hsl(var(--primary));
 }
 
-@keyframes spin-slow {
+/* Smooth Premium Background Gradients */
+.bg-mesh-dark {
+  background-color: #030712;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.08) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(251, 146, 60, 0.05) 0px, transparent 50%);
+}
+
+.bg-mesh-light {
+  background-color: #fafafa;
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(245, 158, 11, 0.04) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(251, 146, 60, 0.03) 0px, transparent 50%);
+}
+
+/* Glassmorphism details */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dark .glass-panel {
+  background: rgba(9, 9, 11, 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+:root:not(.dark) .glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Custom glow animations */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 8s infinite ease-in-out;
+}
+
+/* Page transitons */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+/* Orbit Spin Animations */
+@keyframes spin-clockwise {
   from {
     transform: rotate(0deg);
   }
@@ -44,6 +184,137 @@ body {
     transform: rotate(360deg);
   }
 }
+
+@keyframes spin-counter-clockwise {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
 .animate-spin-slow {
-  animation: spin-slow linear infinite;
+  animation-name: spin-clockwise;
+  animation-duration: 20s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.animate-spin-slow-reverse {
+  animation-name: spin-counter-clockwise;
+  animation-duration: 20s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* Glassmorphic Toast Notifications Override */
+.Toastify__toast-container {
+  width: 360px !important;
+  padding: 12px !important;
+}
+
+.Toastify__toast {
+  background: rgba(15, 15, 20, 0.75) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.08) inset !important;
+  color: #f4f4f5 !important;
+  font-family: var(--font-sans), sans-serif !important;
+  min-height: auto !important;
+  margin-bottom: 12px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.3s ease !important;
+}
+
+:root:not(.dark) .Toastify__toast {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #18181b !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15), 0 0 1px 1px rgba(0, 0, 0, 0.05) inset !important;
+}
+
+/* Accent borders for toast types */
+.Toastify__toast--success {
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+}
+.Toastify__toast--error {
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+.Toastify__toast--info {
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+.Toastify__toast--warning {
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+}
+
+:root:not(.dark) .Toastify__toast--success {
+  border: 1px solid rgba(16, 185, 129, 0.4) !important;
+}
+:root:not(.dark) .Toastify__toast--error {
+  border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+:root:not(.dark) .Toastify__toast--info {
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
+}
+:root:not(.dark) .Toastify__toast--warning {
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Toast body styles */
+.Toastify__toast-body {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+}
+
+/* Custom icons coloring */
+.Toastify__toast-icon {
+  margin-right: 12px !important;
+  width: 20px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Progress bar customizations */
+.Toastify__progress-bar {
+  height: 3px !important;
+  bottom: 0 !important;
+  top: auto !important;
+}
+
+.Toastify__progress-bar--success {
+  background: linear-gradient(90deg, #10b981, #059669) !important;
+}
+.Toastify__progress-bar--error {
+  background: linear-gradient(90deg, #ef4444, #dc2626) !important;
+}
+.Toastify__progress-bar--info {
+  background: linear-gradient(90deg, #3b82f6, #2563eb) !important;
+}
+.Toastify__progress-bar--warning {
+  background: linear-gradient(90deg, #f59e0b, #d97706) !important;
+}
+
+/* Close button style */
+.Toastify__close-button {
+  color: rgba(255, 255, 255, 0.4) !important;
+  opacity: 1 !important;
+  align-self: center !important;
+  margin-left: 8px !important;
+  transition: color 0.2s ease !important;
+}
+.Toastify__close-button:hover {
+  color: #ffffff !important;
+}
+
+:root:not(.dark) .Toastify__close-button {
+  color: rgba(0, 0, 0, 0.4) !important;
+}
+:root:not(.dark) .Toastify__close-button:hover {
+  color: #000000 !important;
 }

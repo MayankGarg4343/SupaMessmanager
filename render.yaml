@@ -1,0 +1,33 @@
+services:
+  # Backend Web Service
+  - type: web
+    name: supamessmanager-backend
+    env: node
+    plan: free
+    rootDir: SupaMessmanager-main/backend
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+
+  # Frontend Static Site
+  - type: web
+    name: supamessmanager-frontend
+    env: static
+    plan: free
+    rootDir: SupaMessmanager-main/frontened
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: supamessmanager-backend
+          property: host
