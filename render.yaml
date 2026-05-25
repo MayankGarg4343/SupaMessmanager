@@ -18,11 +18,12 @@ services:
         value: 7d
 
   # Frontend Static Site
-  - type: static
+  - type: web
     name: supamessmanager-frontend
+    runtime: static
     rootDir: SupaMessmanager-main/frontened
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: ./dist
     envVars:
       - key: VITE_API_URL
         fromService:
